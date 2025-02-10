@@ -29,12 +29,12 @@ public class AccountController {
     @Operation(summary = "Sign up as a new user")
     public ResponseEntity<ResponseFormat<String>> signup(@RequestBody SignUpRequest signUpRequest) {
         log.info("member create");
-        String createdUsername = accountService.joinMember(signUpRequest);
+        String createdEmail = accountService.joinMember(signUpRequest);
 
         ResponseFormat<String> response = new ResponseFormat<>(
                 HttpStatus.OK.value(),
-                "Member registered successfully (username: " + createdUsername + ")",
-                createdUsername
+                "멤버가 성공적으로 등록되었습니다. (email: " + createdEmail + ")",
+                createdEmail
         );
 
         return ResponseEntity.ok(response);
@@ -48,7 +48,7 @@ public class AccountController {
 
         ResponseFormat<JwtResponse> response = new ResponseFormat<>(
                 HttpStatus.OK.value(),
-                "Login successful",
+                "성공적으로 로그인 되었습니다.",
                 loginResult
         );
 

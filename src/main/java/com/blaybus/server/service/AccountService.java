@@ -1,6 +1,8 @@
 package com.blaybus.server.service;
 
 import com.blaybus.server.common.Validator;
+import com.blaybus.server.common.exception.CareLinkException;
+import com.blaybus.server.common.exception.ErrorCode;
 import com.blaybus.server.config.security.jwt.JwtUtils;
 import com.blaybus.server.domain.Member;
 import com.blaybus.server.dto.request.AccountDto.LoginRequest;
@@ -36,15 +38,15 @@ public class AccountService {
     public String joinMember(SignUpRequest request) {
         log.info("join Member");
         if (!validator.checkPassword(request.getPassword(), request.getConfirmPassword())) {
-            throw new RuntimeException("비밀번호가 다릅니다");
+            throw new CareLinkException(ErrorCode.INVALID_CREDENTIALS);
         }
 
         if (!validator.checkRole(request.getType())) {
-            throw new RuntimeException("유저 타입이 잘못 되었습니다");
+            throw new CareLinkException(ErrorCode.INVALID_TYPE);
         }
 
         if (memberRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("중복된 유저입니다.");
+            throw new CareLinkException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
         Member member = Member.createMember(
@@ -62,6 +64,10 @@ public class AccountService {
         String username = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
+        if (!memberRepository.existsByEmail(username)) {
+            throw new CareLinkException(ErrorCode.USER_NOT_FOUND);
+        }
+
         log.info("validateUser: {}, {}", username, password);
         final Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
@@ -74,6 +80,7 @@ public class AccountService {
         final UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority).toList();
-        return new JwtResponse(jwtToken, refreshToken, userDetails.getUsername(), roles);
+
+        return JwtResponse.createJwtResponse(jwtToken, refreshToken, userDetails.getUsername(), roles);
     }
 }

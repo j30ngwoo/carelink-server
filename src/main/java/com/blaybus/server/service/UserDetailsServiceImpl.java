@@ -1,5 +1,7 @@
 package com.blaybus.server.service;
 
+import com.blaybus.server.common.exception.CareLinkException;
+import com.blaybus.server.common.exception.ErrorCode;
 import com.blaybus.server.domain.Member;
 import com.blaybus.server.repository.MemberRepository;
 import jakarta.transaction.Transactional;
@@ -19,7 +21,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Transactional
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("해당하는 유저가 없습니다."));
+                .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
 
         return UserDetailsImpl.build(member);
     }
