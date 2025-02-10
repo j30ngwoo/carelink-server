@@ -11,7 +11,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "Member", indexes = {
-        @Index(name = "idx_member_email", columnList = "username", unique = true),
+        @Index(name = "idx_member_email", columnList = "email", unique = true),
 })
 public class Member {
 
@@ -19,14 +19,25 @@ public class Member {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long Id;
 
-    @Column(name = "username", nullable = false)
-    private String username;
+    @Column(name = "email", nullable = false)
+    private String email;
 
     @Column(name = "password")
     private String password;
 
-    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
+    @ElementCollection(targetClass = MemberRole.class, fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
-    private Set<Role> roles;
+    private Set<MemberRole> memberRoles;
+
+    public static Member createMember(String email, String encodedPassword, MemberRole type) {
+        return Member.builder()
+                .email(email)
+                .password(encodedPassword)
+                .memberRoles(Set.of(
+                        type == MemberRole.CAREGIVER ?
+                                MemberRole.CAREGIVER : MemberRole.ADMIN
+                ))
+                .build();
+    }
 }

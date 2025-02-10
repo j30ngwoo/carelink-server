@@ -1,6 +1,6 @@
 package com.blaybus.server.domain;
 
-public enum Role {
+public enum MemberRole {
     CAREGIVER, ADMIN
 }
 

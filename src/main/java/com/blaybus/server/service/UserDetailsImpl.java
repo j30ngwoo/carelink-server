@@ -56,13 +56,13 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     public static UserDetailsImpl build(Member member) {
-        List<GrantedAuthority> authorities = member.getRoles().stream()
+        List<GrantedAuthority> authorities = member.getMemberRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
                 .collect(Collectors.toList());
 
         return new UserDetailsImpl(
                 member.getId(),
-                member.getUsername(),
+                member.getEmail(),
                 member.getPassword(),
                 authorities
         );
