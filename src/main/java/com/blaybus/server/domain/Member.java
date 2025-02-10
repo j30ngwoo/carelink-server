@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.util.Set;
 
+@Inheritance(strategy = InheritanceType.JOINED)
 @Entity
 @Getter
 @Builder
@@ -30,14 +31,15 @@ public class Member {
     @Column(name = "role")
     private Set<MemberRole> memberRoles;
 
-    public static Member createMember(String email, String encodedPassword, MemberRole type) {
-        return Member.builder()
-                .email(email)
-                .password(encodedPassword)
-                .memberRoles(Set.of(
-                        type == MemberRole.CAREGIVER ?
-                                MemberRole.CAREGIVER : MemberRole.ADMIN
-                ))
-                .build();
+    @Enumerated(EnumType.STRING)
+    @Column(name = "login_type")
+    private LoginType loginType;
+
+    @Builder
+    protected Member(String email, String password, Set<MemberRole> role, LoginType loginType) {
+        this.email = email;
+        this.password = password;
+        this.memberRoles = role;
+        this.loginType = loginType;
     }
 }

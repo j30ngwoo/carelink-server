@@ -7,6 +7,7 @@ import com.blaybus.server.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,7 +28,7 @@ public class AccountController {
 
     @PostMapping("/sign-up")
     @Operation(summary = "Sign up as a new user")
-    public ResponseEntity<ResponseFormat<String>> signup(@RequestBody SignUpRequest signUpRequest) {
+    public ResponseEntity<ResponseFormat<String>> signup(@RequestBody @Valid SignUpRequest signUpRequest) {
         log.info("member create");
         String createdEmail = accountService.joinMember(signUpRequest);
 
@@ -42,7 +43,7 @@ public class AccountController {
 
     @PostMapping("/login")
     @Operation(summary = "Log in as an existing user")
-    public ResponseEntity<ResponseFormat<JwtResponse>> signIn(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<ResponseFormat<JwtResponse>> signIn(@RequestBody @Valid LoginRequest loginRequest) {
         log.info("member sign in");
         JwtResponse loginResult = accountService.loginMember(loginRequest);
 
