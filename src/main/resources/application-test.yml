@@ -1,0 +1,29 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:~/myteam;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+        jdbc:
+          exception-handling: ignore
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+carelink:
+  control:
+    jwtSecret: t/NSdehv9mugwWCkz8q8cu7T/cofvsAZHcBueBvrArY=
+    jwtAccessExpiration: 1800000
+    jwtRefreshExpiration: 36000000
