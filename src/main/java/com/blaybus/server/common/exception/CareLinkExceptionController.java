@@ -8,6 +8,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class CareLinkExceptionController {
@@ -38,5 +39,17 @@ public class CareLinkExceptionController {
                                 null
                         )
                 );
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse<String>> handleMaxSizeException(MaxUploadSizeExceededException ex) {
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(
+                        new ErrorResponse(
+                                HttpStatus.PAYLOAD_TOO_LARGE,
+                                "파일 크기가 너무 큽니다. 최대 업로드 가능 크기를 확인해주세요.",
+                                null
+                        ));
     }
 }

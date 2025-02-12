@@ -1,0 +1,44 @@
+spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-request-size: 50MB # 전체 파일크기
+      max-file-size: 10MB # 개별 파일 크기
+  datasource:
+    url: jdbc:h2:mem:~/carelink;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+        jdbc:
+          exception-handling: ignore
+
+logging:
+  level:
+    root: info
+    org.springframework.security: warn
+    org.springframework.web: warn
+    com.myteam.server: info
+    hibernate.SQL: warn
+    org.springframework.boot.autoconfigure: INFO
+    org.springframework.beans.factory.support.DefaultListableBeanFactory: WARN
+    spring.thymeleaf.check-template-location: false
+    org.hibernate.type: INFO
+
+carelink:
+  control:
+    jwtSecret: ${JWT_SECRET}
+    jwtAccessExpiration: ${JWT_ACCESS_EXPIRATION}
+    jwtRefreshExpiration: ${JWT_REFRESH_EXPIRATION}
+
+s3:
+  accessKey: ${S3_ACCESS_KEY}
+  secretKey: ${S3_SECRET_KEY}
+  region: ${S3_REGION}
+  bucketName: ${S3_BUCKET_NAME}
