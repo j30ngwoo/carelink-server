@@ -42,16 +42,19 @@ public class CareGiver extends Member {
     @Column(name = "address")
     private String address; // 주소
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "caregiver_kinds", joinColumns = @JoinColumn(name = "caregiver_id"))
     @Column(name = "kind")
     private List<String> kind; // 선생님을 나타낼 수 있는 단어 목록
 
-    @Column(name = "certificated_at")
-    private LocalDate certificatedAt; // 시작 경력 (yyyy-MM-dd)
+    @Column(name = "experience")
+    private String experience; // 현재까지의 총 경력 ("X년 Y개월")
 
-    @Column(name = "end_certificated_at")
-    private LocalDate endCertificatedAt; // 마지막 경력 (yyyy-MM-dd)
+    @Column(name = "is_working")
+    private boolean isWorking; // 근무 중 여부
+
+    @Column(name = "work_start_date")
+    private LocalDate workStartDate; // 현재 근무 시작 날짜
 
     @Column(name = "major_experience")
     private String majorExperience; // 주요 경력
@@ -86,8 +89,7 @@ public class CareGiver extends Member {
         this.contactNumber = request.getContactNumber();
 
         this.kind = request.getKind();
-        this.certificatedAt = request.getCertificatedAt();
-        this.endCertificatedAt = request.getEndCertificatedAt();
+        this.experience = getCareerDuration(request.getCertificatedAt(), request.getEndCertificatedAt());
         this.majorExperience = request.getMajorExperience();
         this.introduction = request.getIntroduction();
         this.hourPay = request.getHourPay();
@@ -97,15 +99,70 @@ public class CareGiver extends Member {
     }
 
     /**
+     * 근무 시작 시 호출하는 메서드
+     */
+    public void startWork() {
+        if (!isWorking) { // 근무 중이 아닐 때만 시작 가능
+            this.isWorking = true;
+            this.workStartDate = LocalDate.now();
+        }
+    }
+
+    /**
+     * 근무 종료 시 호출하는 메서드
+     */
+    public void endWork() {
+        if (isWorking && workStartDate != null) {
+            LocalDate today = LocalDate.now();
+            Period workPeriod = Period.between(workStartDate, today);
+
+            // 기존 경력 기간을 가져와서 합산
+            this.experience = updateExperience(workPeriod);
+
+            // 근무 종료 처리
+            this.isWorking = false;
+            this.workStartDate = null;
+        }
+    }
+
+    /**
+     * 기존 경력 + 새로운 근무 기간을 합산하여 업데이트하는 메서드
+     */
+    private String updateExperience(Period workPeriod) {
+        int totalYears = workPeriod.getYears();
+        int totalMonths = workPeriod.getMonths();
+
+        // 기존 경력 기간을 가져오기
+        if (this.experience != null && !this.experience.isEmpty()) {
+            String[] parts = this.experience.split("년 |개월");
+            if (parts.length == 2) {
+                totalYears += Integer.parseInt(parts[0].trim());
+                totalMonths += Integer.parseInt(parts[1].trim());
+            }
+        }
+
+        // 개월 수가 12개월이 넘으면 1년 추가
+        if (totalMonths >= 12) {
+            totalYears += totalMonths / 12;
+            totalMonths = totalMonths % 12;
+        }
+
+        return totalYears + "년 " + totalMonths + "개월";
+    }
+
+    /**
      *
      * @return X년 Y개월 로 변환
      */
-    public String getCareerDuration() {
-        Period period = Period.between(certificatedAt, endCertificatedAt);
+    public String getCareerDuration(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null) {
+            Period period = Period.between(startDate, endDate);
 
-        int years = period.getYears();
-        int months = period.getMonths();
+            int years = period.getYears();
+            int months = period.getMonths();
 
-        return years + "년 " + months + "개월";
+            this.experience = (years + "년 " + months + "개월");
+        }
+        return null;
     }
 }

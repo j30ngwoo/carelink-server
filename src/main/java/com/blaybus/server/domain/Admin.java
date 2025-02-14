@@ -14,7 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class Admin extends Member {
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "center_id")
     private Center center; // 센터 정보
 
