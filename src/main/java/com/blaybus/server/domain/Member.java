@@ -3,6 +3,7 @@ package com.blaybus.server.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -37,6 +38,9 @@ public class Member {
 
     @Column(name = "name", nullable = false)
     private String name; // 이름
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder
     protected Member(String email, String password, Set<MemberRole> role,

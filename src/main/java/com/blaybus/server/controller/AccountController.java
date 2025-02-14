@@ -28,11 +28,11 @@ public class AccountController {
 
     @PostMapping("/sign-up")
     @Operation(summary = "Sign up as a new member or admin")
-    public ResponseEntity<ResponseFormat<String>> signUpMember(@RequestBody @Valid SignUpRequest signUpRequest) {
+    public ResponseEntity<ResponseFormat<Long>> signUpMember(@RequestBody @Valid SignUpRequest signUpRequest) {
         log.info("member created");
-        String createdEmail = accountService.joinMember(signUpRequest);
+        Long createdEmail = accountService.joinMember(signUpRequest);
 
-        ResponseFormat<String> response = new ResponseFormat<>(
+        ResponseFormat<Long> response = new ResponseFormat<>(
                 HttpStatus.OK.value(),
                 "멤버가 성공적으로 등록되었습니다. (email: " + createdEmail + ")",
                 createdEmail
@@ -43,11 +43,11 @@ public class AccountController {
 
     @PutMapping("/sign-up/member")
     @Operation(summary = "Update Member Info")
-    public ResponseEntity<ResponseFormat<String>> signUpMember(@RequestBody @Valid CareGiverRequest careGiverRequest) {
+    public ResponseEntity<ResponseFormat<Long>> signUpMember(@RequestBody @Valid CareGiverRequest careGiverRequest) {
         log.info("CareGiver created");
-        String createdEmail = accountService.updateCareGiver(careGiverRequest);
+        Long createdEmail = accountService.updateCareGiver(careGiverRequest);
 
-        ResponseFormat<String> response = new ResponseFormat<>(
+        ResponseFormat<Long> response = new ResponseFormat<>(
                 HttpStatus.OK.value(),
                 "멤버의 프로필이 성공적으로 등록되었습니다. (email: " + createdEmail + ")",
                 createdEmail
@@ -58,11 +58,11 @@ public class AccountController {
 
     @PostMapping("/sign-up/admin")
     @Operation(summary = "Update Admin Info")
-    public ResponseEntity<ResponseFormat<String>> signUpAdmin(@RequestBody @Valid AdminRequest adminRequest) {
+    public ResponseEntity<ResponseFormat<Long>> signUpAdmin(@RequestBody @Valid AdminRequest adminRequest) {
         log.info("Admin created");
-        String createdEmail = accountService.joinAdmin(adminRequest);
+        Long createdEmail = accountService.joinAdmin(adminRequest);
 
-        ResponseFormat<String> response = new ResponseFormat<>(
+        ResponseFormat<Long> response = new ResponseFormat<>(
                 HttpStatus.OK.value(),
                 "멤버가 성공적으로 등록되었습니다. (email: " + createdEmail + ")",
                 createdEmail

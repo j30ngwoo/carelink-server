@@ -1,5 +1,6 @@
 package com.blaybus.server.domain;
 
+import com.blaybus.server.dto.request.MyPageRequest.AdminUpdateRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +15,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class Admin extends Member {
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "center_id")
     private Center center; // 센터 정보
 
@@ -40,5 +41,15 @@ public class Admin extends Member {
         this.introduction = introduction;
         this.profilePictureUrl = profilePictureUrl;
         this.adminType = adminType;
+    }
+
+    // TODO: 비밀번호 확인.
+    public void updateAdmin(Center center, AdminUpdateRequest request) {
+
+        this.center = center;
+        this.contactNumber = request.getContactNumber();
+        this.introduction = request.getIntroduction();
+        this.profilePictureUrl = request.getProfilePictureUrl();
+        this.adminType = request.getAdminType();
     }
 }

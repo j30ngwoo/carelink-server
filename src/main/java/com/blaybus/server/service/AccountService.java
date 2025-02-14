@@ -12,7 +12,6 @@ import com.blaybus.server.dto.request.SignUpRequest;
 import com.blaybus.server.dto.response.JwtDto.JwtResponse;
 import com.blaybus.server.repository.CenterRepository;
 import com.blaybus.server.repository.MemberRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ public class AccountService {
     private final MemberRepository memberRepository;
     private final CenterRepository centerRepository;
 
-    public String joinMember(SignUpRequest signUpRequest) {
+    public Long joinMember(SignUpRequest signUpRequest) {
         log.info("join Member: {}", signUpRequest.getEmail());
 
         if (memberRepository.existsByEmail(signUpRequest.getEmail())) {
@@ -49,10 +49,10 @@ public class AccountService {
         memberRepository.save(newMember);
         log.info("Successfully create CareGiver: {}", signUpRequest.getEmail());
 
-        return newMember.getEmail();
+        return newMember.getId();
     }
 
-    public String updateCareGiver(CareGiverRequest request) {
+    public Long updateCareGiver(CareGiverRequest request) {
         log.info("join Member: {}", request.getEmail());
 
         CareGiver careGiver = (CareGiver) memberRepository.findByEmail(request.getEmail())
@@ -66,10 +66,10 @@ public class AccountService {
 
         log.info("Successfully join Member: {}", careGiver.getEmail());
 
-        return careGiver.getEmail();
+        return careGiver.getId();
     }
 
-    public String joinAdmin(AdminRequest request) {
+    public Long joinAdmin(AdminRequest request) {
         log.info("join Admin: {}", request.getEmail());
 
         validateSignupRequest(request);
@@ -80,7 +80,7 @@ public class AccountService {
 
         log.info("Successfully join Admin: {}", admin.getEmail());
 
-        return admin.getEmail();
+        return admin.getId();
     }
 
     public JwtResponse loginMember(LoginRequest loginRequest) {
