@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class MyPageService {
 
     private final MemberRepository memberRepository;
@@ -32,6 +32,7 @@ public class MyPageService {
     public AdminResponse getAdminInfo(Long memberId) {
         Admin admin = (Admin) memberRepository.findById(memberId)
                 .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
+        log.info("관리자 조회 성공: {}", memberId);
 
         return AdminResponse.createResponse(admin);
     }

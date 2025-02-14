@@ -1,6 +1,7 @@
 package com.blaybus.server.domain;
 
 import com.blaybus.server.dto.request.CareGiverRequest;
+import com.blaybus.server.dto.request.MyPageRequest.MemberUpdateRequest;
 import com.blaybus.server.dto.request.SignUpRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -93,6 +94,21 @@ public class CareGiver extends Member {
         this.majorExperience = request.getMajorExperience();
         this.introduction = request.getIntroduction();
         this.hourPay = request.getHourPay();
+        this.bank = request.getBank();
+        this.account = request.getAccount();
+        this.accountName = request.getAccountName();
+    }
+
+    public void updateCareGiverInfo(MemberUpdateRequest request) {
+        this.contactNumber = request.getContactNumber();
+        this.certificateNumber = request.getCertificateNumber();
+        this.careGiverType = request.getCareGiverType();
+        this.hasVehicle = request.isHasVehicle();
+        this.completedDementiaTraining = request.isCompletedDementiaTraining();
+        this.address = request.getAddress();
+        this.introduction = request.getIntroduction();
+        this.kind = request.getKind();
+        this.profilePictureUrl = request.getProfilePictureUrl();
         this.bank = request.getBank();
         this.account = request.getAccount();
         this.accountName = request.getAccountName();
