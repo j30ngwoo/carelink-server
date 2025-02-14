@@ -31,10 +31,10 @@ public class Admin extends Member {
     @Enumerated(EnumType.STRING)
     private AdminType adminType;
 
-    public Admin(String email, String password, LoginType loginType,
+    public Admin(String email, String password, LoginType loginType, String name,
                  Center center, String contactNumber,
                  String introduction, String profilePictureUrl, AdminType adminType) {
-        super(email, password, Set.of(MemberRole.ADMIN), loginType);
+        super(email, password, Set.of(MemberRole.CAREGIVER), loginType, name);
         this.center = center;
         this.contactNumber = contactNumber;
         this.introduction = introduction;

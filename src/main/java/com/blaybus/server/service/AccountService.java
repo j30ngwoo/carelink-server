@@ -5,9 +5,10 @@ import com.blaybus.server.common.exception.CareLinkException;
 import com.blaybus.server.common.exception.ErrorCode;
 import com.blaybus.server.config.security.jwt.JwtUtils;
 import com.blaybus.server.domain.*;
-import com.blaybus.server.dto.request.AccountDto.*;
-import com.blaybus.server.dto.request.AccountDto.LoginRequest;
-import com.blaybus.server.dto.request.AccountDto.SignUpRequest;
+import com.blaybus.server.dto.request.AdminRequest;
+import com.blaybus.server.dto.request.CareGiverRequest;
+import com.blaybus.server.dto.request.LoginRequest;
+import com.blaybus.server.dto.request.SignUpRequest;
 import com.blaybus.server.dto.response.JwtDto.JwtResponse;
 import com.blaybus.server.repository.CenterRepository;
 import com.blaybus.server.repository.MemberRepository;
@@ -21,7 +22,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -38,18 +38,49 @@ public class AccountService {
     private final MemberRepository memberRepository;
     private final CenterRepository centerRepository;
 
-    public String joinMember(SignUpRequest request) {
-        log.info("join Member");
+    public String joinMember(SignUpRequest signUpRequest) {
+        log.info("join Member: {}", signUpRequest.getEmail());
+
+        if (memberRepository.existsByEmail(signUpRequest.getEmail())) {
+            throw new CareLinkException(ErrorCode.USER_ALREADY_EXISTS);
+        }
+
+        Member newMember = createCareGiver(signUpRequest);
+        memberRepository.save(newMember);
+        log.info("Successfully create CareGiver: {}", signUpRequest.getEmail());
+
+        return newMember.getEmail();
+    }
+
+    public String updateCareGiver(CareGiverRequest request) {
+        log.info("join Member: {}", request.getEmail());
+
+        CareGiver careGiver = (CareGiver) memberRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
+
+        validateCareGiverRequest(request);
+
+        careGiver.updateCareGiverInfo(request);
+
+        memberRepository.save(careGiver);
+
+        log.info("Successfully join Member: {}", careGiver.getEmail());
+
+        return careGiver.getEmail();
+    }
+
+    public String joinAdmin(AdminRequest request) {
+        log.info("join Admin: {}", request.getEmail());
 
         validateSignupRequest(request);
 
-        Member member = (request.getType() == MemberRole.CAREGIVER) ?
-                createCareGiver(request.getCareGiverRequest(), request.getMemberRequest()) :
-                createAdmin(request.getAdminRequest(), request.getMemberRequest());
+        Member admin = createAdmin(request);
 
-        memberRepository.save(member);
+        memberRepository.save(admin);
 
-        return member.getEmail();
+        log.info("Successfully join Admin: {}", admin.getEmail());
+
+        return admin.getEmail();
     }
 
     public JwtResponse loginMember(LoginRequest loginRequest) {
@@ -77,7 +108,7 @@ public class AccountService {
     }
 
     private void validateSignupRequest(SignUpRequest request) {
-        if (!validator.checkPassword(request.getMemberRequest().getPassword(), request.getMemberRequest().getConfirmPassword())) {
+        if (!validator.checkPassword(request.getPassword(), request.getConfirmPassword())) {
             throw new CareLinkException(ErrorCode.INVALID_CREDENTIALS);
         }
 
@@ -85,29 +116,20 @@ public class AccountService {
             throw new CareLinkException(ErrorCode.INVALID_TYPE);
         }
 
-        if (memberRepository.existsByEmail(request.getMemberRequest().getEmail())) {
+        if (memberRepository.existsByEmail(request.getEmail())) {
             throw new CareLinkException(ErrorCode.USER_ALREADY_EXISTS);
         }
     }
 
-    private CareGiver createCareGiver(CareGiverRequest caregiverInfo, MemberRequest memberRequest) {
-        validateCareGiverRequest(caregiverInfo);
+    private CareGiver createCareGiver(SignUpRequest signUpRequest) {
+        validateSignupRequest(signUpRequest);
 
         return new CareGiver(
-                memberRequest.getEmail(),
-                passwordEncoder.encode(memberRequest.getPassword()),
+                signUpRequest.getEmail(),
+                passwordEncoder.encode(signUpRequest.getPassword()),
                 LoginType.LOCAL,
-                caregiverInfo.getName(),
-                caregiverInfo.getContactNumber(),
-                caregiverInfo.getCertificateNumber(),
-                caregiverInfo.getCareGiverType(),
-                caregiverInfo.isHasVehicle(),
-                caregiverInfo.isCompletedDementiaTraining(),
-                caregiverInfo.getAddress(),
-                caregiverInfo.getCertificatedAt(),
-                caregiverInfo.getMajorExperience(),
-                caregiverInfo.getIntroduction(),
-                caregiverInfo.getProfilePictureUrl()
+                signUpRequest.getGenderType(),
+                signUpRequest.getName()
         );
     }
 
@@ -133,21 +155,22 @@ public class AccountService {
     }
 
 
-    private Admin createAdmin(AdminRequest adminInfo, MemberRequest memberRequest) {
+    private Admin createAdmin(AdminRequest adminRequest) {
         // 1️⃣ 센터 존재 여부 확인
-        Center center = centerRepository.findById(adminInfo.getCenterId())
+        Center center = centerRepository.findById(adminRequest.getCenterId())
                 .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND));
 
         // 2️⃣ Admin 객체 생성
         return new Admin(
-                memberRequest.getEmail(),
-                passwordEncoder.encode(memberRequest.getPassword()),
+                adminRequest.getEmail(),
+                passwordEncoder.encode(adminRequest.getPassword()),
                 LoginType.LOCAL,
+                adminRequest.getName(),
                 center,
-                adminInfo.getContactNumber(),
-                adminInfo.getIntroduction(),
-                adminInfo.getProfilePictureUrl(),
-                adminInfo.getAdminType()
+                adminRequest.getContactNumber(),
+                adminRequest.getIntroduction(),
+                adminRequest.getProfilePictureUrl(),
+                adminRequest.getAdminType()
         );
     }
 

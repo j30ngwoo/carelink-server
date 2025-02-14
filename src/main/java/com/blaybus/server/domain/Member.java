@@ -35,11 +35,16 @@ public class Member {
     @Column(name = "login_type")
     private LoginType loginType;
 
+    @Column(name = "name", nullable = false)
+    private String name; // 이름
+
     @Builder
-    protected Member(String email, String password, Set<MemberRole> role, LoginType loginType) {
+    protected Member(String email, String password, Set<MemberRole> role,
+                     LoginType loginType, String name) {
         this.email = email;
         this.password = password;
         this.memberRoles = role;
         this.loginType = loginType;
+        this.name = name;
     }
 }

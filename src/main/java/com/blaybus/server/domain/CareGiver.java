@@ -1,14 +1,17 @@
 package com.blaybus.server.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import com.blaybus.server.dto.request.CareGiverRequest;
+import com.blaybus.server.dto.request.SignUpRequest;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDate;
+import java.time.Period;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -17,16 +20,16 @@ import java.util.Set;
 @AllArgsConstructor
 public class CareGiver extends Member {
 
-    @Column(name = "name", nullable = false)
-    private String name; // 이름
+    @Enumerated(EnumType.STRING)
+    private GenderType genderType;
 
-    @Column(name = "contact_number", nullable = false)
+    @Column(name = "contact_number")
     private String contactNumber; // 연락처
 
-    @Column(name = "certificate_number", nullable = false)
+    @Column(name = "certificate_number")
     private String certificateNumber; // 자격증 번호
 
-    @Column(name = "certificate_type", nullable = false)
+    @Column(name = "certificate_type")
     @Enumerated(EnumType.STRING)
     private CareGiverType careGiverType; // 요양보호사, 사회복지사 등
 
@@ -36,11 +39,19 @@ public class CareGiver extends Member {
     @Column(name = "completed_dementia_training")
     private boolean completedDementiaTraining; // 치매교육 이수 여부
 
-    @Column(name = "address", nullable = false)
+    @Column(name = "address")
     private String address; // 주소
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "caregiver_kinds", joinColumns = @JoinColumn(name = "caregiver_id"))
+    @Column(name = "kind")
+    private List<String> kind; // 선생님을 나타낼 수 있는 단어 목록
+
     @Column(name = "certificated_at")
-    private String certificatedAt; // 날짜로 경력을 확인(선택 입력: 경력 기간)
+    private LocalDate certificatedAt; // 시작 경력 (yyyy-MM-dd)
+
+    @Column(name = "end_certificated_at")
+    private LocalDate endCertificatedAt; // 마지막 경력 (yyyy-MM-dd)
 
     @Column(name = "major_experience")
     private String majorExperience; // 주요 경력
@@ -51,22 +62,50 @@ public class CareGiver extends Member {
     @Column(name = "profile_picture_url")
     private String profilePictureUrl; // 프로필 사진
 
-    public CareGiver(String email, String password, LoginType loginType, String name,
-                     String contactNumber, String certificateNumber, CareGiverType careGiverType,
-                     boolean hasVehicle, boolean completedDementiaTraining, String address,
-                     String certificatedAt, String majorExperience, String introduction,
-                     String profilePictureUrl) {
-        super(email, password, Set.of(MemberRole.CAREGIVER), loginType);
-        this.name = name;
-        this.contactNumber = contactNumber;
-        this.certificateNumber = certificateNumber;
-        this.careGiverType = careGiverType;
-        this.hasVehicle = hasVehicle;
-        this.completedDementiaTraining = completedDementiaTraining;
-        this.address = address;
-        this.certificatedAt = certificatedAt;
-        this.majorExperience = majorExperience;
-        this.introduction = introduction;
-        this.profilePictureUrl = profilePictureUrl;
+    @Column(name = "hour_pay")
+    private int hourPay;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "bank")
+    private BankType bank;
+    private String account;
+    private String accountName;
+
+    public CareGiver(String email, String password,
+                     LoginType loginType, GenderType genderType, String name) {
+        super(email, password, Set.of(MemberRole.CAREGIVER), loginType, name);
+        this.genderType = genderType;
+    }
+
+    public void updateCareGiverInfo(CareGiverRequest request) {
+        this.certificateNumber = request.getContactNumber();
+        this.careGiverType = request.getCareGiverType();
+        this.address = request.getAddress();
+        this.hasVehicle = request.isHasVehicle();
+        this.completedDementiaTraining = request.isCompletedDementiaTraining();
+        this.contactNumber = request.getContactNumber();
+
+        this.kind = request.getKind();
+        this.certificatedAt = request.getCertificatedAt();
+        this.endCertificatedAt = request.getEndCertificatedAt();
+        this.majorExperience = request.getMajorExperience();
+        this.introduction = request.getIntroduction();
+        this.hourPay = request.getHourPay();
+        this.bank = request.getBank();
+        this.account = request.getAccount();
+        this.accountName = request.getAccountName();
+    }
+
+    /**
+     *
+     * @return X년 Y개월 로 변환
+     */
+    public String getCareerDuration() {
+        Period period = Period.between(certificatedAt, endCertificatedAt);
+
+        int years = period.getYears();
+        int months = period.getMonths();
+
+        return years + "년 " + months + "개월";
     }
 }

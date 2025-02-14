@@ -1,7 +1,10 @@
 package com.blaybus.server.controller;
 
 import com.blaybus.server.dto.ResponseFormat;
-import com.blaybus.server.dto.request.AccountDto.*;
+import com.blaybus.server.dto.request.AdminRequest;
+import com.blaybus.server.dto.request.CareGiverRequest;
+import com.blaybus.server.dto.request.LoginRequest;
+import com.blaybus.server.dto.request.SignUpRequest;
 import com.blaybus.server.dto.response.JwtDto.JwtResponse;
 import com.blaybus.server.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,10 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -27,10 +27,40 @@ public class AccountController {
     private final AccountService accountService;
 
     @PostMapping("/sign-up")
-    @Operation(summary = "Sign up as a new user")
-    public ResponseEntity<ResponseFormat<String>> signup(@RequestBody @Valid SignUpRequest signUpRequest) {
-        log.info("member create");
+    @Operation(summary = "Sign up as a new member or admin")
+    public ResponseEntity<ResponseFormat<String>> signUpMember(@RequestBody @Valid SignUpRequest signUpRequest) {
+        log.info("member created");
         String createdEmail = accountService.joinMember(signUpRequest);
+
+        ResponseFormat<String> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "멤버가 성공적으로 등록되었습니다. (email: " + createdEmail + ")",
+                createdEmail
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/sign-up/member")
+    @Operation(summary = "Update Member Info")
+    public ResponseEntity<ResponseFormat<String>> signUpMember(@RequestBody @Valid CareGiverRequest careGiverRequest) {
+        log.info("CareGiver created");
+        String createdEmail = accountService.updateCareGiver(careGiverRequest);
+
+        ResponseFormat<String> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "멤버의 프로필이 성공적으로 등록되었습니다. (email: " + createdEmail + ")",
+                createdEmail
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/sign-up/admin")
+    @Operation(summary = "Update Admin Info")
+    public ResponseEntity<ResponseFormat<String>> signUpAdmin(@RequestBody @Valid AdminRequest adminRequest) {
+        log.info("Admin created");
+        String createdEmail = accountService.joinAdmin(adminRequest);
 
         ResponseFormat<String> response = new ResponseFormat<>(
                 HttpStatus.OK.value(),
