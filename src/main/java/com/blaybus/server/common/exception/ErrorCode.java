@@ -16,6 +16,8 @@ public enum ErrorCode {
     INVALID_CERTIFICATE_NUMBER_SOCIALWORKER(HttpStatus.BAD_REQUEST,"사회복지사 자격증 번호는 '1-123456' 또는 '2-123456' 형식이어야 합니다."),
     INVALID_CERTIFICATE_NUMBER_NURSINGASSISTANT(HttpStatus.BAD_REQUEST, "간호조무사 자격증 번호는 '1-123456' 또는 '2-123456' 형식이어야 합니다."),
 
+    NO_ADDRESS(HttpStatus.BAD_REQUEST, "주소에 동(洞) 정보가 포함되지 않았습니다."),
+
     // 404 Not Found
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "등록되지 않은 유저입니다."),
     CENTER_NOT_FOUND(HttpStatus.NOT_FOUND, "등록되지 않은 센터입니다."),
