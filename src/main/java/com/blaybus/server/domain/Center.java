@@ -1,13 +1,13 @@
 package com.blaybus.server.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,25 +26,45 @@ public class Center {
     private boolean hasBathVehicle; // 목욕 차량 소유 여부
 
     @Column(name = "created_at")
-    private String createdAt; // 설립년도(이걸로 운영기간 확인)
+    private LocalDateTime createdAt; // 설립년도(이걸로 운영기간 확인)
 
     @Column(name = "address", nullable = false)
     private String address; // 주소
 
     @Column(name = "center_rating")
-    private double centerRating; // 선택 입력: 센터 등급
+    private String centerRating; // 센터 등급
+
+    @Column(name = "tel")
+    private String tel;
+
+    @Column
+    private String city;
+
+    @Column
+    private String county;
+
+    @Column
+    private String region;
 
     public static Center createCenter(String centerName,
                                       boolean hasBathVehicle,
-                                      String createdAt,
-                                      double centerRating,
-                                      String address) {
+                                      LocalDateTime createdAt,
+                                      String centerRating,
+                                      String address,
+                                      String tel,
+                                      String city,
+                                      String county,
+                                      String region) {
         return Center.builder()
                 .centerName(centerName)
                 .hasBathVehicle(hasBathVehicle)
                 .createdAt(createdAt)
                 .address(address)
                 .centerRating(centerRating)
+                .tel(tel)
+                .city(city)
+                .county(county)
+                .region(region)
                 .build();
     }
 
