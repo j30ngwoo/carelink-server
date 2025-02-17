@@ -5,7 +5,10 @@ import com.blaybus.server.common.exception.CareLinkException;
 import com.blaybus.server.common.exception.ErrorCode;
 import com.blaybus.server.config.security.jwt.JwtUtils;
 import com.blaybus.server.domain.*;
+import com.blaybus.server.domain.auth.*;
+import com.blaybus.server.domain.auth.Experience;
 import com.blaybus.server.dto.request.*;
+import com.blaybus.server.dto.request.CareGiverCertificate;
 import com.blaybus.server.dto.response.JwtDto.JwtResponse;
 import com.blaybus.server.repository.CenterRepository;
 import com.blaybus.server.repository.MemberRepository;
@@ -20,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -45,7 +50,7 @@ public class AccountService {
         }
 
         String profileUrl = null;
-        if (!file.isEmpty() && file != null) {
+        if (file != null && !file.isEmpty()) {
             profileUrl = s3Service.uploadFile(file);
         }
 
@@ -62,7 +67,7 @@ public class AccountService {
                 .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
 
         String profileUrl = null;
-        if (!file.isEmpty() && file != null) {
+        if (file != null && !file.isEmpty()) {
             profileUrl = s3Service.uploadFile(file);
         }
 
@@ -75,24 +80,28 @@ public class AccountService {
 
     /**
      * 요양보호사 정보 수정 (업데이트)
-     * 프로필 사진 파일이 있으면 S3에 업로드 후 URL 업데이트
      */
-    public Long updateCareGiver(CareGiverRequest request, MultipartFile profilePicture) {
+    public Long updateCareGiver(CareGiverRequest request) {
         log.info("Updating CareGiver info for email: {}", request.getEmail());
         CareGiver careGiver = (CareGiver) memberRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
 
         validateCareGiverRequest(request);
 
-        if (profilePicture != null && !profilePicture.isEmpty()) {
-            String profileUrl = s3Service.uploadFile(profilePicture);
-            log.info("profile url: {}", profileUrl);
-            careGiver.updateCareGiverInfo(request, profileUrl);
-        } else {
-            careGiver.updateCareGiverInfo(request);
-            log.info("no profile picture");
-        }
+        List<Experience> experiences = new ArrayList<>();
+        if (request.getExperiences() != null) {
+            experiences.addAll(
+                    request.getExperiences().stream()
+                            .map(exp -> {
+                                Center center = centerRepository.findById(exp.getCenterId())
+                                        .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND)); // 🚀 Center 조회
 
+                                return new Experience(careGiver, center, exp.getCertificatedAt(), exp.getEndCertificatedAt(), exp.getAssignedTask());
+                            })
+                            .collect(Collectors.toList())
+            );
+        }
+        careGiver.updateCareGiverInfo(request, experiences);
 
         memberRepository.save(careGiver);
         log.info("Successfully updated CareGiver: {}", careGiver.getEmail());
@@ -105,7 +114,7 @@ public class AccountService {
         validateSignupRequest(request.getEmail(), request.getPassword(), request.getConfirmPassword());
 
         String profileUrl = null;
-        if (!profilePicture.isEmpty() && profilePicture != null) {
+        if (profilePicture != null && !profilePicture.isEmpty()) {
             profileUrl = s3Service.uploadFile(profilePicture);
         }
 
@@ -127,7 +136,7 @@ public class AccountService {
                 .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND));
 
         String profileUrl = null;
-        if (!profilePicture.isEmpty() && profilePicture != null) {
+        if (profilePicture != null && !profilePicture.isEmpty()) {
             profileUrl = s3Service.uploadFile(profilePicture);
         }
 
@@ -187,22 +196,32 @@ public class AccountService {
 
     private void validateCareGiverRequest(CareGiverRequest caregiverInfo) {
         String certificateNumber = caregiverInfo.getCertificateNumber();
-        CareGiverType careGiverType = caregiverInfo.getCareGiverType();
 
-        if (careGiverType == CareGiverType.CAREWORKER) { // 🚀 1️⃣ 요양보호사: 자격증 번호 형식 검증
-            if (!certificateNumber.matches("^[0-9]{9}[A-Z]$")) {
-                throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_CAREWORKER);
+        // 🚀 1️⃣ 요양보호사 자격증 검증 (필수)
+        if (!certificateNumber.matches("^20\\d{2}-\\d{7}$")) {
+            throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_CAREWORKER);
+        }
+
+        List<CareGiverCertificate> certificates = caregiverInfo.getCertificates();
+        for (CareGiverCertificate certificate : certificates) {
+            String certNumber = certificate.getCertificatedNumber();
+            CareGiverType careGiverType = certificate.getCareGiverType();
+
+            if (careGiverType == CareGiverType.SOCIALWORKER) {
+                // 사회복지사 자격증 번호 검증
+                if (!certNumber.matches("^[12]-[0-9]{5,6}$")) {
+                    throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_SOCIALWORKER);
+                }
+            } else if (careGiverType == CareGiverType.NURSINGASSISTANT) {
+                // 간호조무사 자격증 번호 검증
+                if (!certNumber.matches("^(\\d{4}-\\d{5})|(0000-\\d{5})$") &&
+                        !certNumber.matches("^\\d{5,6}$")) {
+                    throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_NURSINGASSISTANT);
+                }
+            } else {
+                // 🚀 3️⃣ 알 수 없는 자격증 종류 예외 처리
+                throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_TYPE);
             }
-        } else if (careGiverType == CareGiverType.SOCIALWORKER) { // 🚀 2️⃣ 사회복지사: 자격증 번호 형식 검증
-            if (!certificateNumber.matches("^[12]-[0-9]{5,6}$")) {
-                throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_SOCIALWORKER);
-            }
-        } else if (careGiverType == CareGiverType.NURSINGASSISTANT) { // 🚀 3️⃣ 간호조무사: 자격증 번호 형식 검증
-            if (!certificateNumber.matches("^[12]-[0-9]{5,6}$")) {
-                throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_NURSINGASSISTANT);
-            }
-        } else { // 🚀 4️⃣ 알 수 없는 자격증 종류
-            throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_TYPE);
         }
     }
 

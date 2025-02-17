@@ -1,9 +1,9 @@
-package com.blaybus.server.domain;
+package com.blaybus.server.domain.auth;
 
+import com.blaybus.server.domain.Center;
 import com.blaybus.server.dto.request.MyPageRequest.AdminUpdateRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -34,7 +34,7 @@ public class Admin extends Member {
     public Admin(String email, String password, LoginType loginType, String name,
                  Center center, String contactNumber,
                  String introduction, String profilePictureUrl) {
-        super(email, password, Set.of(MemberRole.CAREGIVER), loginType);
+        super(email, password, Set.of(MemberRole.ADMIN), loginType);
         this.name = name;
         this.center = center;
         this.contactNumber = contactNumber;

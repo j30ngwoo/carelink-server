@@ -1,7 +1,5 @@
 package com.blaybus.server.dto.request;
 
-import com.blaybus.server.domain.AdminType;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;

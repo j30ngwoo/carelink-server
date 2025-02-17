@@ -1,9 +1,6 @@
 package com.blaybus.server.dto.request;
 
-import com.blaybus.server.domain.GenderType;
-import com.blaybus.server.domain.MemberRole;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.blaybus.server.domain.auth.GenderType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;

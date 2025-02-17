@@ -1,6 +1,6 @@
 package com.blaybus.server.common;
 
-import com.blaybus.server.domain.MemberRole;
+import com.blaybus.server.domain.auth.MemberRole;
 import org.springframework.stereotype.Component;
 
 @Component

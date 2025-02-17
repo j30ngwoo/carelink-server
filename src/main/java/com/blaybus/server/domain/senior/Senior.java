@@ -4,7 +4,7 @@ import com.blaybus.server.common.exception.CareLinkException;
 import com.blaybus.server.common.exception.ErrorCode;
 import com.blaybus.server.domain.Center;
 import com.blaybus.server.domain.Day;
-import com.blaybus.server.domain.GenderType;
+import com.blaybus.server.domain.auth.GenderType;
 import com.blaybus.server.dto.request.SeniorRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,7 +12,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashSet;

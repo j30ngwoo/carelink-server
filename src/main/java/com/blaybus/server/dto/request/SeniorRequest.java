@@ -1,8 +1,7 @@
 package com.blaybus.server.dto.request;
 
-import com.blaybus.server.domain.Center;
 import com.blaybus.server.domain.Day;
-import com.blaybus.server.domain.GenderType;
+import com.blaybus.server.domain.auth.GenderType;
 import com.blaybus.server.domain.senior.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;

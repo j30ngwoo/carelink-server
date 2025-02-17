@@ -2,7 +2,7 @@ package com.blaybus.server.dto.response;
 
 import com.blaybus.server.domain.Center;
 import com.blaybus.server.domain.Day;
-import com.blaybus.server.domain.GenderType;
+import com.blaybus.server.domain.auth.GenderType;
 import com.blaybus.server.domain.senior.*;
 import lombok.Builder;
 import lombok.Getter;

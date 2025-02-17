@@ -34,7 +34,7 @@ public class AccountController {
     @Operation(summary = "요양보호사 자사 회원가입")
     public ResponseEntity<ResponseFormat<Long>> signUpMember(
             @Valid @RequestPart("signUpRequest") SignUpRequest signUpRequest,
-            @RequestPart MultipartFile file) {
+            @RequestPart(required = false) MultipartFile file) {
         log.info("member created");
         Long createdMemberId = accountService.joinMember(signUpRequest, file);
 
@@ -54,7 +54,7 @@ public class AccountController {
     @Operation(summary = "요양보호사 소셜 로그인시 정보 수정 필드")
     public ResponseEntity<ResponseFormat<Long>> updateMemberInfo(
             @Valid @RequestPart("careGiverSocialRequest") CareGiverSocialRequest careGiverSocialRequest,
-            @RequestPart MultipartFile file) {
+            @RequestPart(required = false) MultipartFile file) {
         Long saveMemberInfoId = accountService.saveMemberInfo(careGiverSocialRequest, file);
 
         ResponseFormat<Long> response = new ResponseFormat<>(
@@ -68,14 +68,12 @@ public class AccountController {
 
     /**
      * 프로필 등록
-     * JSON과 프로필 사진 파일을 함께 받음.
      */
-    @PutMapping(value = "/profile/member", consumes = {"multipart/form-data"})
+    @PutMapping(value = "/profile/member")
     @Operation(summary = "프로필 등록")
-    public ResponseEntity<ResponseFormat<Long>> signUpMember(
-            @Valid @RequestPart("careGiverRequest") CareGiverRequest careGiverRequest,
-            @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
-        Long createdId = accountService.updateCareGiver(careGiverRequest, profilePicture);
+    public ResponseEntity<ResponseFormat<Long>> registerCareGiverProfile(
+            @Valid @RequestBody CareGiverRequest careGiverRequest) {
+        Long createdId = accountService.updateCareGiver(careGiverRequest);
 
         ResponseFormat<Long> response = new ResponseFormat<>(
                 HttpStatus.OK.value(),
@@ -113,7 +111,7 @@ public class AccountController {
     @Operation(summary = "요양보호사 소셜 로그인시 정보 수정 필드")
     public ResponseEntity<ResponseFormat<Long>> updateAdminInfo(
             @Valid @RequestPart("adminSocialRequest") AdminSocialRequest adminSocialRequest,
-            @RequestPart MultipartFile file) {
+            @RequestPart(required = false) MultipartFile file) {
         Long createdId = accountService.saveAdminInfo(adminSocialRequest, file);
 
         ResponseFormat<Long> response = new ResponseFormat<>(
