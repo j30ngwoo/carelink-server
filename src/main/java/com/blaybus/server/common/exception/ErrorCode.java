@@ -23,6 +23,7 @@ public enum ErrorCode {
     INVALID_MEDICAL_CONDITION(HttpStatus.BAD_REQUEST, "유효하지 않은 질환 정보입니다."),
     NOT_ADMIN(HttpStatus.BAD_REQUEST, "해당 회원은 어드민이 아닙니다."),
     INVALID_ADMIN_IDENTIFIER(HttpStatus.BAD_REQUEST, "유효하지 않은 admin 식별자입니다."),
+    INVALID_CENTER_NAME(HttpStatus.BAD_REQUEST, "센터 이름이 적절하지 않습니다."),
 
 
     NO_ADDRESS(HttpStatus.BAD_REQUEST, "주소에 동(洞) 정보가 포함되지 않았습니다."),
