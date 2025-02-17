@@ -1,4 +1,4 @@
-package com.blaybus.server.domain;
+package com.blaybus.server.domain.auth;
 
 public enum AdminType {
     CENTERDIRECTOR, // 센터장

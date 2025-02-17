@@ -1,4 +1,4 @@
-package com.blaybus.server.domain;
+package com.blaybus.server.domain.auth;
 
 public enum MemberRole {
     CAREGIVER, ADMIN

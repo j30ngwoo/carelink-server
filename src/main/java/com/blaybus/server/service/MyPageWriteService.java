@@ -2,8 +2,8 @@ package com.blaybus.server.service;
 
 import com.blaybus.server.common.exception.CareLinkException;
 import com.blaybus.server.common.exception.ErrorCode;
-import com.blaybus.server.domain.Admin;
-import com.blaybus.server.domain.CareGiver;
+import com.blaybus.server.domain.auth.Admin;
+import com.blaybus.server.domain.auth.CareGiver;
 import com.blaybus.server.domain.Center;
 import com.blaybus.server.dto.request.MyPageRequest.MemberUpdateRequest;
 import com.blaybus.server.dto.request.MyPageRequest.AdminUpdateRequest;
@@ -28,7 +28,7 @@ public class MyPageWriteService {
                 .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
 
         log.info("요양 보호사 조회 성공: {}", memberId);
-        careGiver.updateCareGiverInfo(memberUpdateRequest);
+//        careGiver.updateCareGiverInfo(memberUpdateRequest);
         memberRepository.save(careGiver);
         log.info("요양 보호사 수정 성공: {}", memberId);
 

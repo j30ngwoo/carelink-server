@@ -1,11 +1,8 @@
 package com.blaybus.server.dto.request;
 
-import com.blaybus.server.domain.AdminType;
-import com.blaybus.server.domain.BankType;
-import com.blaybus.server.domain.CareGiverType;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import com.blaybus.server.domain.auth.AdminType;
+import com.blaybus.server.domain.auth.BankType;
+import com.blaybus.server.domain.auth.CareGiverType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,6 +1,6 @@
 package com.blaybus.server.service;
 
-import com.blaybus.server.domain.Member;
+import com.blaybus.server.domain.auth.Member;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;

@@ -5,10 +5,10 @@ import com.blaybus.server.common.exception.CareLinkException;
 import com.blaybus.server.common.exception.ErrorCode;
 import com.blaybus.server.config.security.jwt.JwtUtils;
 import com.blaybus.server.domain.*;
-import com.blaybus.server.dto.request.AdminRequest;
-import com.blaybus.server.dto.request.CareGiverRequest;
-import com.blaybus.server.dto.request.LoginRequest;
-import com.blaybus.server.dto.request.SignUpRequest;
+import com.blaybus.server.domain.auth.*;
+import com.blaybus.server.domain.auth.Experience;
+import com.blaybus.server.dto.request.*;
+import com.blaybus.server.dto.request.CareGiverCertificate;
 import com.blaybus.server.dto.response.JwtDto.JwtResponse;
 import com.blaybus.server.repository.CenterRepository;
 import com.blaybus.server.repository.MemberRepository;
@@ -23,7 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -40,56 +42,107 @@ public class AccountService {
     private final CenterRepository centerRepository;
     private final S3Service s3Service;
 
-    public Long joinMember(SignUpRequest signUpRequest) {
+    public Long joinMember(SignUpRequest signUpRequest, MultipartFile file) {
         log.info("join Member: {}", signUpRequest.getEmail());
 
         if (memberRepository.existsByEmail(signUpRequest.getEmail())) {
             throw new CareLinkException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
-        Member newMember = createCareGiver(signUpRequest);
+        String profileUrl = null;
+        if (file != null && !file.isEmpty()) {
+            profileUrl = s3Service.uploadFile(file);
+        }
+
+        Member newMember = createCareGiver(signUpRequest, profileUrl);
         memberRepository.save(newMember);
         log.info("Successfully create CareGiver: {}", signUpRequest.getEmail());
 
         return newMember.getId();
     }
 
+    public Long saveMemberInfo(CareGiverSocialRequest request, MultipartFile file) {
+        log.info("소셜 회원가입 시 멤버 정보 등록: {}", request.getEmail());
+        CareGiver careGiver = (CareGiver) memberRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
+
+        String profileUrl = null;
+        if (file != null && !file.isEmpty()) {
+            profileUrl = s3Service.uploadFile(file);
+        }
+
+        careGiver.saveBySocial(request.getGenderType(), request.getName(), request.getContactNumber(), profileUrl);
+        memberRepository.save(careGiver);
+        log.info("성공적으로 소셜로그인 이후 정보 등록 완료: {}", careGiver.getId());
+
+        return careGiver.getId();
+    }
+
     /**
      * 요양보호사 정보 수정 (업데이트)
-     * 프로필 사진 파일이 있으면 S3에 업로드 후 URL 업데이트
      */
-    public Long updateCareGiver(CareGiverRequest request, MultipartFile profilePicture) {
+    public Long updateCareGiver(CareGiverRequest request) {
         log.info("Updating CareGiver info for email: {}", request.getEmail());
         CareGiver careGiver = (CareGiver) memberRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
 
         validateCareGiverRequest(request);
 
-        if (profilePicture != null && !profilePicture.isEmpty()) {
-            String profileUrl = s3Service.uploadFile(profilePicture);
-            log.info("profile url: {}", profileUrl);
-            careGiver.updateCareGiverInfo(request, profileUrl);
-        } else {
-            careGiver.updateCareGiverInfo(request);
-            log.info("no profile picture");
-        }
+        List<Experience> experiences = new ArrayList<>();
+        if (request.getExperiences() != null) {
+            experiences.addAll(
+                    request.getExperiences().stream()
+                            .map(exp -> {
+                                Center center = centerRepository.findById(exp.getCenterId())
+                                        .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND)); // 🚀 Center 조회
 
+                                return new Experience(careGiver, center, exp.getCertificatedAt(), exp.getEndCertificatedAt(), exp.getAssignedTask());
+                            })
+                            .collect(Collectors.toList())
+            );
+        }
+        careGiver.updateCareGiverInfo(request, experiences);
 
         memberRepository.save(careGiver);
         log.info("Successfully updated CareGiver: {}", careGiver.getEmail());
         return careGiver.getId();
     }
 
-    public Long joinAdmin(AdminRequest request) {
+    public Long joinAdmin(AdminRequest request, MultipartFile profilePicture) {
         log.info("join Admin: {}", request.getEmail());
 
-        validateSignupRequest(request);
+        validateSignupRequest(request.getEmail(), request.getPassword(), request.getConfirmPassword());
 
-        Member admin = createAdmin(request);
+        String profileUrl = null;
+        if (profilePicture != null && !profilePicture.isEmpty()) {
+            profileUrl = s3Service.uploadFile(profilePicture);
+        }
+
+        Member admin = createAdmin(request, profileUrl);
 
         memberRepository.save(admin);
 
         log.info("Successfully join Admin: {}", admin.getEmail());
+
+        return admin.getId();
+    }
+
+    public Long saveAdminInfo(AdminSocialRequest request, MultipartFile profilePicture) {
+        log.info("소셜 회원가입 시 관리자 정보 등록: {}", request.getEmail());
+        Admin admin = (Admin) memberRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
+
+        Center center = centerRepository.findById(request.getCenterId())
+                .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND));
+
+        String profileUrl = null;
+        if (profilePicture != null && !profilePicture.isEmpty()) {
+            profileUrl = s3Service.uploadFile(profilePicture);
+        }
+
+        admin.saveBySocial(center, request.getName(), request.getContactNumber(), request.getIntroduction(), profileUrl);
+        memberRepository.save(admin);
+        log.info("성공적으로 소셜로그인 이후 정보 등록 완료: {}", admin.getId());
 
         return admin.getId();
     }
@@ -118,55 +171,62 @@ public class AccountService {
         return JwtResponse.createJwtResponse(jwtToken, refreshToken, userDetails.getUsername(), roles);
     }
 
-    private void validateSignupRequest(SignUpRequest request) {
-        if (!validator.checkPassword(request.getPassword(), request.getConfirmPassword())) {
+    private void validateSignupRequest(String email, String password, String confirmPassword) {
+        if (!validator.checkPassword(password, confirmPassword)) {
             throw new CareLinkException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        if (!validator.checkRole(request.getType())) {
-            throw new CareLinkException(ErrorCode.INVALID_TYPE);
-        }
-
-        if (memberRepository.existsByEmail(request.getEmail())) {
+        if (memberRepository.existsByEmail(email)) {
             throw new CareLinkException(ErrorCode.USER_ALREADY_EXISTS);
         }
     }
 
-    private CareGiver createCareGiver(SignUpRequest signUpRequest) {
-        validateSignupRequest(signUpRequest);
+    private CareGiver createCareGiver(SignUpRequest signUpRequest, String profileUrl) {
+        validateSignupRequest(signUpRequest.getEmail(), signUpRequest.getPassword(), signUpRequest.getConfirmPassword());
 
         return new CareGiver(
                 signUpRequest.getEmail(),
                 passwordEncoder.encode(signUpRequest.getPassword()),
                 LoginType.LOCAL,
                 signUpRequest.getGenderType(),
-                signUpRequest.getName()
+                signUpRequest.getName(),
+                profileUrl
         );
     }
 
     private void validateCareGiverRequest(CareGiverRequest caregiverInfo) {
         String certificateNumber = caregiverInfo.getCertificateNumber();
-        CareGiverType careGiverType = caregiverInfo.getCareGiverType();
 
-        if (careGiverType == CareGiverType.CAREWORKER) { // 🚀 1️⃣ 요양보호사: 자격증 번호 형식 검증
-            if (!certificateNumber.matches("^[0-9]{9}[A-Z]$")) {
-                throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_CAREWORKER);
+        // 🚀 1️⃣ 요양보호사 자격증 검증 (필수)
+        if (!certificateNumber.matches("^20\\d{2}-\\d{7}$")) {
+            throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_CAREWORKER);
+        }
+
+        List<CareGiverCertificate> certificates = caregiverInfo.getCertificates();
+        for (CareGiverCertificate certificate : certificates) {
+            String certNumber = certificate.getCertificatedNumber();
+            CareGiverType careGiverType = certificate.getCareGiverType();
+
+            if (careGiverType == CareGiverType.SOCIALWORKER) {
+                // 사회복지사 자격증 번호 검증
+                if (!certNumber.matches("^[12]-[0-9]{5,6}$")) {
+                    throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_SOCIALWORKER);
+                }
+            } else if (careGiverType == CareGiverType.NURSINGASSISTANT) {
+                // 간호조무사 자격증 번호 검증
+                if (!certNumber.matches("^(\\d{4}-\\d{5})|(0000-\\d{5})$") &&
+                        !certNumber.matches("^\\d{5,6}$")) {
+                    throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_NURSINGASSISTANT);
+                }
+            } else {
+                // 🚀 3️⃣ 알 수 없는 자격증 종류 예외 처리
+                throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_TYPE);
             }
-        } else if (careGiverType == CareGiverType.SOCIALWORKER) { // 🚀 2️⃣ 사회복지사: 자격증 번호 형식 검증
-            if (!certificateNumber.matches("^[12]-[0-9]{5,6}$")) {
-                throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_SOCIALWORKER);
-            }
-        } else if (careGiverType == CareGiverType.NURSINGASSISTANT) { // 🚀 3️⃣ 간호조무사: 자격증 번호 형식 검증
-            if (!certificateNumber.matches("^[12]-[0-9]{5,6}$")) {
-                throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_NUMBER_NURSINGASSISTANT);
-            }
-        } else { // 🚀 4️⃣ 알 수 없는 자격증 종류
-            throw new CareLinkException(ErrorCode.INVALID_CERTIFICATE_TYPE);
         }
     }
 
 
-    private Admin createAdmin(AdminRequest adminRequest) {
+    private Admin createAdmin(AdminRequest adminRequest, String profileUrl) {
         // 1️⃣ 센터 존재 여부 확인
         Center center = centerRepository.findById(adminRequest.getCenterId())
                 .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND));
@@ -180,8 +240,7 @@ public class AccountService {
                 center,
                 adminRequest.getContactNumber(),
                 adminRequest.getIntroduction(),
-                adminRequest.getProfilePictureUrl(),
-                adminRequest.getAdminType()
+                profileUrl
         );
     }
 

@@ -10,17 +10,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class SignUpRequest {
+public class CareGiverSocialRequest {
     @NotNull(message = "이메일은 필수입니다.")
     private String email;
-
-    @NotNull
-    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[0-9]).{4,10}$", message = "비밀번호는 영문, 숫자 조합 4 ~ 10자 이내로 입력해주세요")
-    private String password;
-
-    @NotNull
-    @Pattern(regexp = "^(?=.*[a-zA-Z])(?=.*[0-9]).{4,10}$", message = "비밀번호는 영문, 숫자 조합 4 ~ 10자 이내로 입력해주세요")
-    private String confirmPassword;
 
     @NotNull
     private GenderType genderType;
