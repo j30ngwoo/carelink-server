@@ -1,9 +1,12 @@
 package com.blaybus.server.domain;
 
+import com.blaybus.server.domain.senior.Senior;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -45,6 +48,9 @@ public class Center {
 
     @Column
     private String region;
+
+    @OneToMany(mappedBy = "center")
+    private List<Senior> seniors; // 센터에 소속된 시니어들
 
     public static Center createCenter(String centerName,
                                       boolean hasBathVehicle,
