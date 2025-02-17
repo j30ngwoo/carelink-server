@@ -5,10 +5,7 @@ import com.blaybus.server.common.exception.CareLinkException;
 import com.blaybus.server.common.exception.ErrorCode;
 import com.blaybus.server.config.security.jwt.JwtUtils;
 import com.blaybus.server.domain.*;
-import com.blaybus.server.dto.request.AdminRequest;
-import com.blaybus.server.dto.request.CareGiverRequest;
-import com.blaybus.server.dto.request.LoginRequest;
-import com.blaybus.server.dto.request.SignUpRequest;
+import com.blaybus.server.dto.request.*;
 import com.blaybus.server.dto.response.JwtDto.JwtResponse;
 import com.blaybus.server.repository.CenterRepository;
 import com.blaybus.server.repository.MemberRepository;
@@ -40,18 +37,40 @@ public class AccountService {
     private final CenterRepository centerRepository;
     private final S3Service s3Service;
 
-    public Long joinMember(SignUpRequest signUpRequest) {
+    public Long joinMember(SignUpRequest signUpRequest, MultipartFile file) {
         log.info("join Member: {}", signUpRequest.getEmail());
 
         if (memberRepository.existsByEmail(signUpRequest.getEmail())) {
             throw new CareLinkException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
-        Member newMember = createCareGiver(signUpRequest);
+        String profileUrl = null;
+        if (!file.isEmpty() && file != null) {
+            profileUrl = s3Service.uploadFile(file);
+        }
+
+        Member newMember = createCareGiver(signUpRequest, profileUrl);
         memberRepository.save(newMember);
         log.info("Successfully create CareGiver: {}", signUpRequest.getEmail());
 
         return newMember.getId();
+    }
+
+    public Long saveMemberInfo(CareGiverSocialRequest request, MultipartFile file) {
+        log.info("소셜 회원가입 시 멤버 정보 등록: {}", request.getEmail());
+        CareGiver careGiver = (CareGiver) memberRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
+
+        String profileUrl = null;
+        if (!file.isEmpty() && file != null) {
+            profileUrl = s3Service.uploadFile(file);
+        }
+
+        careGiver.saveBySocial(request.getGenderType(), request.getName(), request.getContactNumber(), profileUrl);
+        memberRepository.save(careGiver);
+        log.info("성공적으로 소셜로그인 이후 정보 등록 완료: {}", careGiver.getId());
+
+        return careGiver.getId();
     }
 
     /**
@@ -80,16 +99,41 @@ public class AccountService {
         return careGiver.getId();
     }
 
-    public Long joinAdmin(AdminRequest request) {
+    public Long joinAdmin(AdminRequest request, MultipartFile profilePicture) {
         log.info("join Admin: {}", request.getEmail());
 
-        validateSignupRequest(request);
+        validateSignupRequest(request.getEmail(), request.getPassword(), request.getConfirmPassword());
 
-        Member admin = createAdmin(request);
+        String profileUrl = null;
+        if (!profilePicture.isEmpty() && profilePicture != null) {
+            profileUrl = s3Service.uploadFile(profilePicture);
+        }
+
+        Member admin = createAdmin(request, profileUrl);
 
         memberRepository.save(admin);
 
         log.info("Successfully join Admin: {}", admin.getEmail());
+
+        return admin.getId();
+    }
+
+    public Long saveAdminInfo(AdminSocialRequest request, MultipartFile profilePicture) {
+        log.info("소셜 회원가입 시 관리자 정보 등록: {}", request.getEmail());
+        Admin admin = (Admin) memberRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new CareLinkException(ErrorCode.USER_NOT_FOUND));
+
+        Center center = centerRepository.findById(request.getCenterId())
+                .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND));
+
+        String profileUrl = null;
+        if (!profilePicture.isEmpty() && profilePicture != null) {
+            profileUrl = s3Service.uploadFile(profilePicture);
+        }
+
+        admin.saveBySocial(center, request.getName(), request.getContactNumber(), request.getIntroduction(), profileUrl);
+        memberRepository.save(admin);
+        log.info("성공적으로 소셜로그인 이후 정보 등록 완료: {}", admin.getId());
 
         return admin.getId();
     }
@@ -118,29 +162,26 @@ public class AccountService {
         return JwtResponse.createJwtResponse(jwtToken, refreshToken, userDetails.getUsername(), roles);
     }
 
-    private void validateSignupRequest(SignUpRequest request) {
-        if (!validator.checkPassword(request.getPassword(), request.getConfirmPassword())) {
+    private void validateSignupRequest(String email, String password, String confirmPassword) {
+        if (!validator.checkPassword(password, confirmPassword)) {
             throw new CareLinkException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        if (!validator.checkRole(request.getType())) {
-            throw new CareLinkException(ErrorCode.INVALID_TYPE);
-        }
-
-        if (memberRepository.existsByEmail(request.getEmail())) {
+        if (memberRepository.existsByEmail(email)) {
             throw new CareLinkException(ErrorCode.USER_ALREADY_EXISTS);
         }
     }
 
-    private CareGiver createCareGiver(SignUpRequest signUpRequest) {
-        validateSignupRequest(signUpRequest);
+    private CareGiver createCareGiver(SignUpRequest signUpRequest, String profileUrl) {
+        validateSignupRequest(signUpRequest.getEmail(), signUpRequest.getPassword(), signUpRequest.getConfirmPassword());
 
         return new CareGiver(
                 signUpRequest.getEmail(),
                 passwordEncoder.encode(signUpRequest.getPassword()),
                 LoginType.LOCAL,
                 signUpRequest.getGenderType(),
-                signUpRequest.getName()
+                signUpRequest.getName(),
+                profileUrl
         );
     }
 
@@ -166,7 +207,7 @@ public class AccountService {
     }
 
 
-    private Admin createAdmin(AdminRequest adminRequest) {
+    private Admin createAdmin(AdminRequest adminRequest, String profileUrl) {
         // 1️⃣ 센터 존재 여부 확인
         Center center = centerRepository.findById(adminRequest.getCenterId())
                 .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND));
@@ -180,8 +221,7 @@ public class AccountService {
                 center,
                 adminRequest.getContactNumber(),
                 adminRequest.getIntroduction(),
-                adminRequest.getProfilePictureUrl(),
-                adminRequest.getAdminType()
+                profileUrl
         );
     }
 

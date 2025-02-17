@@ -21,6 +21,9 @@ import java.util.Set;
 @AllArgsConstructor
 public class CareGiver extends Member {
 
+    @Column(name = "name", nullable = false)
+    private String name; // 이름
+
     @Enumerated(EnumType.STRING)
     private GenderType genderType;
 
@@ -76,9 +79,18 @@ public class CareGiver extends Member {
     private String accountName;
 
     public CareGiver(String email, String password,
-                     LoginType loginType, GenderType genderType, String name) {
-        super(email, password, Set.of(MemberRole.CAREGIVER), loginType, name);
+                     LoginType loginType, GenderType genderType, String name, String profilePictureUrl) {
+        super(email, password, Set.of(MemberRole.CAREGIVER), loginType);
+        this.name = name;
         this.genderType = genderType;
+        this.profilePictureUrl = profilePictureUrl;
+    }
+
+    public void saveBySocial(GenderType genderType, String name, String contactNumber, String profilePictureUrl) {
+        this.genderType = genderType;
+        this.name = name;
+        this.contactNumber = contactNumber;
+        this.profilePictureUrl = profilePictureUrl;
     }
 
     public void updateCareGiverInfo(CareGiverRequest request) {

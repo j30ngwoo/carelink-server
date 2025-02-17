@@ -36,19 +36,15 @@ public class Member {
     @Column(name = "login_type")
     private LoginType loginType;
 
-    @Column(name = "name", nullable = false)
-    private String name; // 이름
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @Builder
     protected Member(String email, String password, Set<MemberRole> role,
-                     LoginType loginType, String name) {
+                     LoginType loginType) {
         this.email = email;
         this.password = password;
         this.memberRoles = role;
         this.loginType = loginType;
-        this.name = name;
     }
 }

@@ -83,7 +83,6 @@ public record MyPageResponse() {
                     .name(admin.getName()) // 이름
                     .createdAt(admin.getCreatedAt()) // 계정 생성일
                     .contactNumber(admin.getContactNumber()) // 연락처
-                    .adminType(admin.getAdminType()) // 관리자 유형
                     .introduction(admin.getIntroduction()) // 한줄 소개
                     .profilePictureUrl(admin.getProfilePictureUrl() != null ?
                             admin.getProfilePictureUrl() : "기본_프로필_URL") // 기본 아이콘 설정

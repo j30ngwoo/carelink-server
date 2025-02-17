@@ -1,10 +1,7 @@
 package com.blaybus.server.controller;
 
 import com.blaybus.server.dto.ResponseFormat;
-import com.blaybus.server.dto.request.AdminRequest;
-import com.blaybus.server.dto.request.CareGiverRequest;
-import com.blaybus.server.dto.request.LoginRequest;
-import com.blaybus.server.dto.request.SignUpRequest;
+import com.blaybus.server.dto.request.*;
 import com.blaybus.server.dto.response.JwtDto.JwtResponse;
 import com.blaybus.server.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,29 +25,55 @@ public class AccountController {
 
     private final AccountService accountService;
 
-    @PostMapping("/sign-up")
-    @Operation(summary = "Sign up as a new member or admin")
-    public ResponseEntity<ResponseFormat<Long>> signUpMember(@RequestBody @Valid SignUpRequest signUpRequest) {
+    /**
+     * 요양 보호사 회원가입
+     * @param signUpRequest
+     * @return
+     */
+    @PostMapping(value = "/sign-up/member", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "요양보호사 자사 회원가입")
+    public ResponseEntity<ResponseFormat<Long>> signUpMember(
+            @Valid @RequestPart("signUpRequest") SignUpRequest signUpRequest,
+            @RequestPart MultipartFile file) {
         log.info("member created");
-        Long createdEmail = accountService.joinMember(signUpRequest);
+        Long createdMemberId = accountService.joinMember(signUpRequest, file);
 
         ResponseFormat<Long> response = new ResponseFormat<>(
                 HttpStatus.OK.value(),
-                "멤버가 성공적으로 등록되었습니다. (email: " + createdEmail + ")",
-                createdEmail
+                "요양보호사가 성공적으로 등록되었습니다. (id: " + createdMemberId + ")",
+                createdMemberId
         );
 
         return ResponseEntity.ok(response);
     }
 
     /**
-     * 내 정보 수정 (요양보호사)
+     * 요양보호사 소셜 로그인을 위한 정보 수정
+     */
+    @PutMapping(value = "/sign-up/member", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "요양보호사 소셜 로그인시 정보 수정 필드")
+    public ResponseEntity<ResponseFormat<Long>> updateMemberInfo(
+            @Valid @RequestPart("careGiverSocialRequest") CareGiverSocialRequest careGiverSocialRequest,
+            @RequestPart MultipartFile file) {
+        Long saveMemberInfoId = accountService.saveMemberInfo(careGiverSocialRequest, file);
+
+        ResponseFormat<Long> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "요양보호사 정보가 성공적으로 등록되었습니다. (id: " + saveMemberInfoId + ")",
+                saveMemberInfoId
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 프로필 등록
      * JSON과 프로필 사진 파일을 함께 받음.
      */
-    @PutMapping(value = "/sign-up/member", consumes = {"multipart/form-data"})
-    @Operation(summary = "Update Member Info")
+    @PutMapping(value = "/profile/member", consumes = {"multipart/form-data"})
+    @Operation(summary = "프로필 등록")
     public ResponseEntity<ResponseFormat<Long>> signUpMember(
-            @RequestPart("careGiverRequest") @Valid CareGiverRequest careGiverRequest,
+            @Valid @RequestPart("careGiverRequest") CareGiverRequest careGiverRequest,
             @RequestPart(value = "profilePicture", required = false) MultipartFile profilePicture) {
         Long createdId = accountService.updateCareGiver(careGiverRequest, profilePicture);
 
@@ -62,24 +86,48 @@ public class AccountController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/sign-up/admin")
-    @Operation(summary = "Update Admin Info")
-    public ResponseEntity<ResponseFormat<Long>> signUpAdmin(@RequestBody @Valid AdminRequest adminRequest) {
+    /**
+     * 관리자 자사 회원가입
+     */
+    @PostMapping(value = "/sign-up/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "관리자 자사 회원가입")
+    public ResponseEntity<ResponseFormat<Long>> signUpAdmin(
+            @Valid @RequestPart("adminRequest") AdminRequest adminRequest,
+            @RequestPart(required = false) MultipartFile file) {
         log.info("Admin created");
-        Long createdEmail = accountService.joinAdmin(adminRequest);
+        Long createdId = accountService.joinAdmin(adminRequest, file);
 
         ResponseFormat<Long> response = new ResponseFormat<>(
                 HttpStatus.OK.value(),
-                "멤버가 성공적으로 등록되었습니다. (email: " + createdEmail + ")",
-                createdEmail
+                "관리자가 성공적으로 등록되었습니다. (email: " + createdId + ")",
+                createdId
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 관리자 소셜로그인 회원가입을 위한 정보 수정
+     */
+    @PutMapping(value = "/sign-up/admin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "요양보호사 소셜 로그인시 정보 수정 필드")
+    public ResponseEntity<ResponseFormat<Long>> updateAdminInfo(
+            @Valid @RequestPart("adminSocialRequest") AdminSocialRequest adminSocialRequest,
+            @RequestPart MultipartFile file) {
+        Long createdId = accountService.saveAdminInfo(adminSocialRequest, file);
+
+        ResponseFormat<Long> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "요양보호사 정보가 성공적으로 등록되었습니다. (email: " + createdId + ")",
+                createdId
         );
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Log in as an existing user")
-    public ResponseEntity<ResponseFormat<JwtResponse>> signIn(@RequestBody @Valid LoginRequest loginRequest) {
+    @Operation(summary = "로그인")
+    public ResponseEntity<ResponseFormat<JwtResponse>> signIn(@Valid @RequestBody LoginRequest loginRequest) {
         log.info("member sign in");
         JwtResponse loginResult = accountService.loginMember(loginRequest);
 
