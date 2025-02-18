@@ -1,5 +1,6 @@
 package com.blaybus.server.domain.auth;
 
+import com.blaybus.server.domain.journal.CareJournal;
 import com.blaybus.server.dto.request.CareGiverRequest;
 import com.blaybus.server.dto.request.MyPageRequest.MemberUpdateRequest;
 import jakarta.persistence.*;
@@ -84,6 +85,11 @@ public class CareGiver extends Member {
     private boolean isWorking; // 근무 중 여부
     @Column(name = "work_start_date")
     private LocalDate workStartDate; // 현재 근무 시작 날짜
+
+    // 효주 추가
+    @OneToMany(mappedBy = "careGiver", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CareJournal> careJournals;
+    // 효주 추가 끝
 
     public CareGiver(String email, String password,
                      LoginType loginType, GenderType genderType, String name, String profilePictureUrl) {

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 public class CareJournalSearchRequest {
-    private Long seniorId;
+    private String seniorName;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 }

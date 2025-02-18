@@ -1,4 +1,4 @@
-package com.blaybus.server.domain;
+package com.blaybus.server.domain.journal;
 
 public enum SleepQuality {
     GOOD, // 양호
