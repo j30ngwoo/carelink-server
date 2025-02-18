@@ -2,10 +2,14 @@ package com.blaybus.server.service;
 
 import com.blaybus.server.domain.CareJournal;
 import com.blaybus.server.dto.request.CareJournalRequest;
+import com.blaybus.server.dto.request.CareJournalSearchRequest;
+import com.blaybus.server.repository.CareJournalQueryRepository;
 import com.blaybus.server.repository.CareJournalRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,6 +18,7 @@ import java.util.Optional;
 public class CareJournalService {
 
     private final CareJournalRepository careJournalRepository;
+    private final CareJournalQueryRepository careJournalQueryRepository;
 
     public CareJournal createCareJournal(CareJournalRequest request) {
         CareJournal careJournal = buildCareJournalFromRequest(request);
@@ -42,13 +47,17 @@ public class CareJournalService {
         return careJournalRepository.findByMemberId(memberId);
     }
 
+    public List<CareJournal> searchCareJournal(CareJournalSearchRequest careJournalSearchRequest) {
+        return careJournalQueryRepository.searchCareJournal(
+                careJournalSearchRequest.getSeniorId(),
+                careJournalSearchRequest.getStartDate(),
+                careJournalSearchRequest.getEndDate()
+        );
+    }
+
     private CareJournal buildCareJournalFromRequest(CareJournalRequest request) {
         return CareJournal.builder()
-                .meal(request.getMeal())
-                .breakfast(request.getBreakfast())
-                .lunch(request.getLunch())
-                .dinner(request.getDinner())
-                .snack(request.getSnack())
+                .meals(request.getMeal())
                 .restroomSmall(request.getRestroomSmall())
                 .restroomSmallMethod(request.getRestroomSmallMethod())
                 .restroomSmallCondition(request.getRestroomSmallCondition())
@@ -65,6 +74,7 @@ public class CareJournalService {
                 .medicationName(request.getMedicationName())
                 .notes(request.getNotes())
                 .adminNote(request.getAdminNote())
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 }

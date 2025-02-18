@@ -1,9 +1,13 @@
 package com.blaybus.server.controller;
 
 import com.blaybus.server.domain.CareJournal;
+import com.blaybus.server.dto.ResponseFormat;
 import com.blaybus.server.dto.request.CareJournalRequest;
+import com.blaybus.server.dto.request.CareJournalSearchRequest;
 import com.blaybus.server.service.CareJournalService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,37 +22,96 @@ public class CareJournalController {
     private final CareJournalService careJournalService;
 
     @PostMapping
-    public ResponseEntity<CareJournal> createCareJournal(@RequestBody CareJournalRequest request) {
+    public ResponseEntity<ResponseFormat<CareJournal>> createCareJournal(@Valid @RequestBody CareJournalRequest request) {
         CareJournal careJournal = careJournalService.createCareJournal(request);
-        return ResponseEntity.ok(careJournal);
+
+        ResponseFormat<CareJournal> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "케어일지가 등록되었습니다.",
+                careJournal
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<CareJournal>> getAllCareJournals() {
-        return ResponseEntity.ok(careJournalService.getAllCareJournals());
+    public ResponseEntity<ResponseFormat<List<CareJournal>>> getAllCareJournals() {
+        List<CareJournal> careJournals = careJournalService.getAllCareJournals();
+
+        ResponseFormat<List<CareJournal>> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "케어일지가 조회되었습니다.",
+                careJournals
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CareJournal> getCareJournalById(@PathVariable Long id) {
+    public ResponseEntity<ResponseFormat<CareJournal>> getCareJournalById(@PathVariable Long id) {
         Optional<CareJournal> careJournal = careJournalService.getCareJournalById(id);
-        return careJournal.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+
+        ResponseFormat<CareJournal> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "케어일지를 상세 조회되었습니다.",
+                careJournal.orElse(null)
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CareJournal> updateCareJournal(@PathVariable Long id, @RequestBody CareJournalRequest request) {
+    public ResponseEntity<ResponseFormat<CareJournal>> updateCareJournal(@PathVariable Long id, @RequestBody CareJournalRequest request) {
         CareJournal updatedCareJournal = careJournalService.updateCareJournal(id, request);
-        return ResponseEntity.ok(updatedCareJournal);
+
+        ResponseFormat<CareJournal> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "케어일지가 수정되었습니다.",
+                updatedCareJournal
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCareJournal(@PathVariable Long id) {
+    public ResponseEntity<ResponseFormat<Void>> deleteCareJournal(@PathVariable Long id) {
         careJournalService.deleteCareJournal(id);
-        return ResponseEntity.noContent().build();
+
+        ResponseFormat<Void> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "케어일지가 삭제되었습니다.",
+                null
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/member/{memberId}")
-    public ResponseEntity<List<CareJournal>> getCareJournalsByMemberId(@PathVariable Long memberId) {
+    public ResponseEntity<ResponseFormat<List<CareJournal>>> getCareJournalsByMemberId(@PathVariable Long memberId) {
         List<CareJournal> careJournals = careJournalService.getCareJournalsByMemberId(memberId);
-        return ResponseEntity.ok(careJournals);
+
+        ResponseFormat<List<CareJournal>> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "멤버의 케어일지가 조회되었습니다.",
+                careJournals
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 검색
+     */
+    @GetMapping
+    public ResponseEntity<ResponseFormat<List<CareJournal>>> getCareJournalBy(@ModelAttribute CareJournalSearchRequest careJournalSearchRequest) {
+        List<CareJournal> careJournals = careJournalService.searchCareJournal(careJournalSearchRequest);
+
+        ResponseFormat<List<CareJournal>> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "케어일지가 검색되었습니다.",
+                careJournals
+        );
+
+        return ResponseEntity.ok(response);
     }
 }

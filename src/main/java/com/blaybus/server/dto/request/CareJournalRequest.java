@@ -1,17 +1,17 @@
 package com.blaybus.server.dto.request;
 
 import com.blaybus.server.domain.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
 public class CareJournalRequest {
-    private Meal meal;
-    private String breakfast;
-    private String lunch;
-    private String dinner;
-    private String snack;
+    @NotNull
+    private List<MealMenu> meal;
     private RestroomSmall restroomSmall;
     private String restroomSmallMethod;
     private String restroomSmallCondition;

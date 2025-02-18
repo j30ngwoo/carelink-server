@@ -3,6 +3,10 @@ package com.blaybus.server.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -21,25 +25,9 @@ public class CareJournal {
 
     // 건강 페이지
     // 식사 여부
-    @Enumerated(EnumType.STRING)
-    @Column(name = "meal")
-    private Meal meal;
-
-    // 아침 식사 메뉴
-    @Column(name = "breakfast", columnDefinition = "TEXT")
-    private String breakfast;
-
-    // 점심 식사 메뉴
-    @Column(name = "lunch", columnDefinition = "TEXT")
-    private String lunch;
-
-    // 저녁 식사 메뉴
-    @Column(name = "dinner", columnDefinition = "TEXT")
-    private String dinner;
-
-    // 간식 메뉴
-    @Column(name = "snack", columnDefinition = "TEXT")
-    private String snack;
+    @ElementCollection(fetch = FetchType.EAGER) // 🚀 List<MealMenu> 저장
+    @CollectionTable(name = "care_journal_meals", joinColumns = @JoinColumn(name = "care_journal_id"))
+    private List<MealMenu> meals = new ArrayList<>();
 
     // 소변 횟수
     @Enumerated(EnumType.STRING)
@@ -112,4 +100,6 @@ public class CareJournal {
     // 관리자 전달사항
     @Column(name = "admin_note", columnDefinition = "TEXT")
     private String adminNote;
+
+    private LocalDateTime createdAt;
 }
