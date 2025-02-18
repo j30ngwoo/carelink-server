@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,6 +34,15 @@ public class CenterService {
         List<Center> centerList = centerRepository.findByAddressContaining(city, county, region);
 
         return CenterResponse.createListResponse(centerList);
+    }
+
+    @Transactional(readOnly = true)
+    public CenterResponse findCentersByName(String name) {
+        if (name == null || name.length() >= 30) {
+            throw new CareLinkException(ErrorCode.INVALID_CENTER_NAME);
+        }
+        List<Center> centers = centerRepository.findByCenterNameContaining(name);
+        return CenterResponse.createListResponse(centers);
     }
 
     @Transactional(readOnly = true)

@@ -16,4 +16,6 @@ public interface CenterRepository extends JpaRepository<Center, Long> {
             @Param("county") String county,
             @Param("region") String region
     );
+
+    List<Center> findByCenterNameContaining(String name);
 }

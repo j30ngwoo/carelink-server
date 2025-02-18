@@ -5,6 +5,7 @@ import com.blaybus.server.dto.ResponseFormat;
 import com.blaybus.server.dto.request.CenterRequest.*;
 import com.blaybus.server.dto.response.CenterResponse;
 import com.blaybus.server.service.CenterService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class CenterController {
     private final CenterService centerService;
 
     @GetMapping
+    @Operation(summary = "센터를 시/군/구로 조회")
     public ResponseEntity<ResponseFormat<CenterResponse>> getCentersByDong(@ModelAttribute CenterGetRequest centerRequest) {
         CenterResponse centerResponses = centerService.findCentersByDong(centerRequest);
 
@@ -38,7 +40,23 @@ public class CenterController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/search")
+    @Operation(summary = "센터 이름으로 조회")
+    public ResponseEntity<ResponseFormat<CenterResponse>> getCentersByName(@RequestParam String name) {
+        CenterResponse centerResponses = centerService.findCentersByName(name);
+
+        ResponseFormat<CenterResponse> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "센터 정보 조회 성공",
+                centerResponses
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+
     @GetMapping("/{centerId}")
+    @Operation(summary = "센터를 아이디로 조회")
     public ResponseEntity<ResponseFormat<CenterResponse.CenterInfo>> getCenterById(@PathVariable Long centerId) {
         CenterResponse.CenterInfo centerInfo = centerService.findCenterById(centerId);
 
@@ -52,6 +70,7 @@ public class CenterController {
     }
 
     @PostMapping
+    @Operation(summary = "센터 등록")
     public ResponseEntity<ResponseFormat<Long>> registrationCenter(@RequestBody CenterPostRequest centerRequest) {
         Long newCenterId = centerService.saveCenter(centerRequest);
 
@@ -65,6 +84,7 @@ public class CenterController {
     }
 
     @PutMapping("/{centerId}")
+    @Operation(summary = "센터 수정")
     public ResponseEntity<ResponseFormat<String>> updateCenter(
             @PathVariable Long centerId,
             @RequestBody CenterUpdateRequest updateRequest) {
@@ -81,6 +101,7 @@ public class CenterController {
     }
 
     @DeleteMapping("/{centerId}")
+    @Operation(summary = "센터 삭제")
     public ResponseEntity<ResponseFormat<Void>> deleteCenter(@PathVariable Long centerId) {
         centerService.deleteCenter(centerId);
 

@@ -2,7 +2,7 @@ package com.blaybus.server.service;
 
 import com.blaybus.server.common.exception.CareLinkException;
 import com.blaybus.server.common.exception.ErrorCode;
-import com.blaybus.server.domain.Member;
+import com.blaybus.server.domain.auth.Member;
 import com.blaybus.server.repository.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

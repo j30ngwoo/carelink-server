@@ -1,15 +1,16 @@
 package com.blaybus.server.dto.response;
 
 import com.blaybus.server.domain.*;
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import com.blaybus.server.domain.auth.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.blaybus.server.dto.response.CenterResponse.createCenterInfo;
 
 public record MyPageResponse() {
 
@@ -23,21 +24,27 @@ public record MyPageResponse() {
         private LocalDateTime createdAt;
         private String contactNumber;
         private String certificateNumber;
-        private CareGiverType careGiverType;
         private boolean hasVehicle;
         private boolean completedDementiaTraining;
-        private String address;
-        private List<String> kind;
+
+        private String streetAddress;
+        private String detailAddress;
+        private String region;
+
+        private List<Kindness> kinds;
         private String introduction;
         private String profilePictureUrl;
         private int hourPay;
         private BankType bank;
         private String account;
         private String accountName;
-        private String experience;
+
+        private String careerPeriod; // "X년 Y개월" 형식
+        private List<CareGiverCertificateResponse> certificates; // 보유 자격증 목록
+        private List<ExperienceResponse> experiences; // 전체 경력 목록
+        private List<MatchingConditionType> selectedConditions; // 매칭 필수 조건
 
         public static CareGiverResponse createResponse(CareGiver careGiver) {
-
             return CareGiverResponse.builder()
                     .name(careGiver.getName())
                     .email(careGiver.getEmail())
@@ -45,18 +52,44 @@ public record MyPageResponse() {
                     .createdAt(careGiver.getCreatedAt())
                     .contactNumber(careGiver.getContactNumber())
                     .certificateNumber(careGiver.getCertificateNumber())
-                    .careGiverType(careGiver.getCareGiverType())
                     .hasVehicle(careGiver.isHasVehicle())
                     .completedDementiaTraining(careGiver.isCompletedDementiaTraining())
-                    .address(careGiver.getAddress())
-                    .kind(careGiver.getKind())
+
+                    // 🚀 주소 관련 필드 분리
+                    .streetAddress(careGiver.getStreetAddress())
+                    .detailAddress(careGiver.getDetailAddress())
+                    .region(careGiver.getRegion())
+
+                    // 🚀 성격 유형 (List<Kindness>)
+                    .kinds(careGiver.getKinds())
+
                     .introduction(careGiver.getIntroduction())
                     .profilePictureUrl(careGiver.getProfilePictureUrl())
                     .hourPay(careGiver.getHourPay())
                     .bank(careGiver.getBank())
                     .account(careGiver.getAccount())
                     .accountName(careGiver.getAccountName())
-                    .experience(careGiver.getExperience())
+
+                    // 🚀 경력 계산 ("X년 Y개월")
+                    .careerPeriod(careGiver.getCareerPeriod())
+
+                    // 🚀 보유 자격증 (List<CareGiverCertificateResponse>)
+                    .certificates(
+                            careGiver.getCertificates().stream()
+                                    .map(CareGiverCertificateResponse::fromEntity)
+                                    .collect(Collectors.toList())
+                    )
+
+                    // 🚀 전체 경력 (List<ExperienceResponse>)
+                    .experiences(
+                            careGiver.getExperiences().stream()
+                                    .map(ExperienceResponse::fromEntity)
+                                    .collect(Collectors.toList())
+                    )
+
+                    // 🚀 매칭 필수 조건
+                    .selectedConditions(careGiver.getSelectedConditions())
+
                     .build();
         }
     }
@@ -65,7 +98,7 @@ public record MyPageResponse() {
     @Builder
     @AllArgsConstructor
     public static final class AdminResponse {
-        private Center center;
+        private CenterResponse.CenterInfo centerInfo;
         private String email;
         private LoginType loginType;
         private String name; // 이름
@@ -77,13 +110,12 @@ public record MyPageResponse() {
 
         public static AdminResponse createResponse(Admin admin) {
             return AdminResponse.builder()
-                    .center(admin.getCenter()) // 소속 센터
+                    .centerInfo(createCenterInfo(admin.getCenter())) // 소속 센터
                     .email(admin.getEmail()) // 이메일
                     .loginType(admin.getLoginType()) // 로그인 방식 (SNS 등)
                     .name(admin.getName()) // 이름
                     .createdAt(admin.getCreatedAt()) // 계정 생성일
                     .contactNumber(admin.getContactNumber()) // 연락처
-                    .adminType(admin.getAdminType()) // 관리자 유형
                     .introduction(admin.getIntroduction()) // 한줄 소개
                     .profilePictureUrl(admin.getProfilePictureUrl() != null ?
                             admin.getProfilePictureUrl() : "기본_프로필_URL") // 기본 아이콘 설정
