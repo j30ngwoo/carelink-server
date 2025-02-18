@@ -1,12 +1,14 @@
 package com.blaybus.server.dto.request;
 
-import com.blaybus.server.domain.*;
+import com.blaybus.server.domain.journal.*;
+import com.blaybus.server.domain.journal.*;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
 public class CareJournalRequest {
+    private Long memberId;
+
+    // 건강 페이지
     private Meal meal;
     private String breakfast;
     private String lunch;
@@ -18,14 +20,22 @@ public class CareJournalRequest {
     private RestroomBig restroomBig;
     private String restroomBigMethod;
     private String restroomBigCondition;
+
+    // 활동 및 정서 페이지
     private SleepTime sleepTime;
     private SleepQuality sleepQuality;
     private String activity;
     private String emotion;
+
+    // 위생 페이지
     private Boolean bath;
     private String skinCondition;
+
+    // 투약 페이지
     private MedicationTime medicationTime;
     private String medicationName;
-    private String notes;
+
+    // 특이사항 페이지
+    private String specialNotes;
     private String adminNote;
 }

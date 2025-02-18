@@ -1,6 +1,7 @@
 package com.blaybus.server.service;
 
-import com.blaybus.server.domain.CareJournal;
+import com.blaybus.server.domain.*;
+import com.blaybus.server.domain.journal.*;
 import com.blaybus.server.dto.request.CareJournalRequest;
 import com.blaybus.server.repository.CareJournalRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,9 +30,12 @@ public class CareJournalService {
     }
 
     public CareJournal updateCareJournal(Long id, CareJournalRequest request) {
-        CareJournal careJournal = buildCareJournalFromRequest(request);
-        careJournal.setId(id);
-        return careJournalRepository.save(careJournal);
+        if (!careJournalRepository.existsById(id)) {
+            throw new RuntimeException("CareJournal not found");
+        }
+        CareJournal updatedJournal = buildCareJournalFromRequest(request);
+        updatedJournal.setId(id);
+        return careJournalRepository.save(updatedJournal);
     }
 
     public void deleteCareJournal(Long id) {
@@ -42,8 +46,23 @@ public class CareJournalService {
         return careJournalRepository.findByMemberId(memberId);
     }
 
+    public Optional<CareJournal> getCareJournalByMemberIdAndCareJournalId(Long memberId, Long careJournalId) {
+        return careJournalRepository.findByMemberIdAndId(memberId, careJournalId);
+    }
+
     private CareJournal buildCareJournalFromRequest(CareJournalRequest request) {
         return CareJournal.builder()
+                .memberId(request.getMemberId())
+                .healthJournal(buildHealthJournal(request))
+                .activityJournal(buildActivityJournal(request))
+                .hygieneJournal(buildHygieneJournal(request))
+                .medicationJournal(buildMedicationJournal(request))
+                .notesJournal(buildNotesJournal(request))
+                .build();
+    }
+
+    private HealthJournal buildHealthJournal(CareJournalRequest request) {
+        return HealthJournal.builder()
                 .meal(request.getMeal())
                 .breakfast(request.getBreakfast())
                 .lunch(request.getLunch())
@@ -55,15 +74,35 @@ public class CareJournalService {
                 .restroomBig(request.getRestroomBig())
                 .restroomBigMethod(request.getRestroomBigMethod())
                 .restroomBigCondition(request.getRestroomBigCondition())
+                .build();
+    }
+
+    private ActivityJournal buildActivityJournal(CareJournalRequest request) {
+        return ActivityJournal.builder()
                 .sleepTime(request.getSleepTime())
                 .sleepQuality(request.getSleepQuality())
                 .activity(request.getActivity())
                 .emotion(request.getEmotion())
+                .build();
+    }
+
+    private HygieneJournal buildHygieneJournal(CareJournalRequest request) {
+        return HygieneJournal.builder()
                 .bath(request.getBath())
                 .skinCondition(request.getSkinCondition())
+                .build();
+    }
+
+    private MedicationJournal buildMedicationJournal(CareJournalRequest request) {
+        return MedicationJournal.builder()
                 .medicationTime(request.getMedicationTime())
                 .medicationName(request.getMedicationName())
-                .notes(request.getNotes())
+                .build();
+    }
+
+    private NotesJournal buildNotesJournal(CareJournalRequest request) {
+        return NotesJournal.builder()
+                .specialNotes(request.getSpecialNotes())
                 .adminNote(request.getAdminNote())
                 .build();
     }

@@ -1,4 +1,4 @@
-package com.blaybus.server.domain;
+package com.blaybus.server.domain.journal;
 
 public enum SleepTime {
     ONE_TO_FOUR_HOURS,
