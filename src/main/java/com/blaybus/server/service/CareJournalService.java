@@ -4,6 +4,8 @@ import com.blaybus.server.domain.auth.CareGiver;
 import com.blaybus.server.domain.journal.*;
 import com.blaybus.server.domain.senior.Senior;
 import com.blaybus.server.dto.request.CareJournalRequest;
+import com.blaybus.server.dto.request.CareJournalSearchRequest;
+import com.blaybus.server.repository.CareJournalQueryRepository;
 import com.blaybus.server.repository.CareJournalRepository;
 import com.blaybus.server.repository.CareGiverRepository;
 import com.blaybus.server.repository.SeniorRepository;
@@ -21,6 +23,7 @@ public class CareJournalService {
     private final CareJournalRepository careJournalRepository;
     private final CareGiverRepository careGiverRepository;
     private final SeniorRepository seniorRepository;
+    private final CareJournalQueryRepository careJournalQueryRepository;
 
     public CareJournal createCareJournal(Long seniorId, CareJournalRequest request) {
         CareGiver careGiver = careGiverRepository.findById(request.getCareGiverId())
@@ -57,6 +60,14 @@ public class CareJournalService {
         CareJournal careJournal = careJournalRepository.findBySeniorIdAndId(seniorId, careJournalId)
                 .orElseThrow(() -> new RuntimeException("CareJournal not found"));
         careJournalRepository.delete(careJournal);
+    }
+
+    public List<CareJournal> searchCareJournal(CareJournalSearchRequest careJournalSearchRequest) {
+        return careJournalQueryRepository.searchCareJournal(
+                careJournalSearchRequest.getSeniorName(),
+                careJournalSearchRequest.getStartDate(),
+                careJournalSearchRequest.getEndDate()
+        );
     }
 
     /**
