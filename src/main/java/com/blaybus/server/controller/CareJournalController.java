@@ -3,6 +3,7 @@ package com.blaybus.server.controller;
 import com.blaybus.server.domain.journal.CareJournal;
 import com.blaybus.server.dto.ResponseFormat;
 import com.blaybus.server.dto.request.CareJournalRequest;
+import com.blaybus.server.dto.request.CareJournalSearchRequest;
 import com.blaybus.server.dto.response.CareJournalResponse;
 import com.blaybus.server.service.CareJournalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -98,5 +99,21 @@ public class CareJournalController {
                 null
         );
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(responseFormat);
+    }
+
+    /**
+     * 검색
+     */
+    @GetMapping("/search")
+    public ResponseEntity<ResponseFormat<List<CareJournal>>> getCareJournalBy(@ModelAttribute CareJournalSearchRequest careJournalSearchRequest) {
+        List<CareJournal> careJournals = careJournalService.searchCareJournal(careJournalSearchRequest);
+
+        ResponseFormat<List<CareJournal>> response = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "케어일지가 검색되었습니다.",
+                careJournals
+        );
+
+        return ResponseEntity.ok(response);
     }
 }
