@@ -1,8 +1,10 @@
 package com.blaybus.server.controller;
 
 import com.blaybus.server.domain.Center;
+import com.blaybus.server.domain.auth.GenderType;
 import com.blaybus.server.dto.ResponseFormat;
 import com.blaybus.server.dto.request.CenterRequest.*;
+import com.blaybus.server.dto.response.CareGiverResponse;
 import com.blaybus.server.dto.response.CenterResponse;
 import com.blaybus.server.service.CenterService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -112,5 +114,29 @@ public class CenterController {
         );
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{centerId}/seniors")
+    @Operation(summary = "센터에 속한 어르신 리스트 조회")
+    public CenterResponse getSeniorsByCenter(@PathVariable Long centerId) {
+        return centerService.findSeniorsByCenterId(centerId);
+    }
+
+    @GetMapping("/{centerId}/caregivers")
+    @Operation(summary = "조건에 따라 요양보호사 리스트 조회")
+    public ResponseEntity<ResponseFormat<List<String>>> getCareGiversByConditions(
+            @PathVariable Long centerId,
+            @RequestParam String workingRegion,
+            @RequestParam GenderType preferGenderType) {
+        log.info("Received request to get CareGivers for center ID: {}", centerId);
+        List<String> careGivers = centerService.findCareGiversByConditions(centerId, workingRegion, preferGenderType);
+
+        ResponseFormat<List<String>> responseFormat = new ResponseFormat<>(
+                HttpStatus.OK.value(),
+                "요양보호사 리스트 조회 성공",
+                careGivers
+        );
+
+        return ResponseEntity.ok(responseFormat);
     }
 }

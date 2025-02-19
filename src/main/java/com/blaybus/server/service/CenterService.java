@@ -4,8 +4,14 @@ import com.blaybus.server.common.AddressUtils;
 import com.blaybus.server.common.exception.CareLinkException;
 import com.blaybus.server.common.exception.ErrorCode;
 import com.blaybus.server.domain.Center;
+import com.blaybus.server.domain.auth.CareGiver;
+import com.blaybus.server.domain.auth.GenderType;
+import com.blaybus.server.domain.senior.Senior;
 import com.blaybus.server.dto.request.CenterRequest.*;
+import com.blaybus.server.dto.response.CareGiverResponse;
 import com.blaybus.server.dto.response.CenterResponse;
+import com.blaybus.server.dto.response.MyPageResponse;
+import com.blaybus.server.repository.CareGiverRepository;
 import com.blaybus.server.repository.CenterRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +27,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class CenterService {
     private final CenterRepository centerRepository;
+    private final CareGiverRepository careGiverRepository;
 
     public CenterResponse findCentersByDong(CenterGetRequest centerRequest) {
         String city = centerRequest.getCity();
@@ -98,5 +105,38 @@ public class CenterService {
             throw new CareLinkException(ErrorCode.CENTER_NOT_FOUND);
         }
         centerRepository.deleteById(centerId);
+    }
+
+    // 효주 추가
+    public CenterResponse findSeniorsByCenterId(Long centerId) {
+        log.info("센터 ID로 어르신 조회: {}", centerId);
+        Center center = centerRepository.findById(centerId)
+                .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND));
+
+        List<Senior> seniors = center.getSeniors();
+        return CenterResponse.createSeniorListResponse(seniors);
+    }
+
+    public List<String> findCareGiversByConditions(Long centerId, String workingRegion, GenderType preferGenderType) {
+        log.info("센터 ID로 요양보호사 조회: {}", centerId);
+        Center center = centerRepository.findById(centerId)
+                .orElseThrow(() -> new CareLinkException(ErrorCode.CENTER_NOT_FOUND));
+
+        List<CareGiver> careGivers = careGiverRepository.findAll();
+
+        return careGivers.stream()
+                .map(careGiver -> {
+                    int score = 0;
+                    if (careGiver.getRegion().equals(workingRegion)) {
+                        score += 5;
+                    }
+                    if (careGiver.getGenderType() == preferGenderType) {
+                        score += 5;
+                    }
+                    return CareGiverResponse.fromEntity(careGiver, score);
+                })
+                .sorted((cg1, cg2) -> Integer.compare(cg2.getScore(), cg1.getScore()))
+                .map(CareGiverResponse::getCareGiver)
+                .collect(Collectors.toList());
     }
 }

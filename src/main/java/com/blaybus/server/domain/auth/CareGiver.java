@@ -56,7 +56,8 @@ public class CareGiver extends Member {
 
     @OneToMany(mappedBy = "careGiver", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Column(name = "experiences")
-    private List<Experience> experiences; // 현재까지의 총 경력 ("X년 Y개월")
+    private List<Experience> experiences; // 현재까지의
+    // 총 경력 ("X년 Y개월")
     @Column(name = "career_period")
     private String careerPeriod;
 

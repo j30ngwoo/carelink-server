@@ -49,7 +49,7 @@ public class Center {
     @Column
     private String region;
 
-    @OneToMany(mappedBy = "center")
+    @OneToMany(mappedBy = "center", cascade =  CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Senior> seniors; // 센터에 소속된 시니어들
 
     public static Center createCenter(String centerName,
