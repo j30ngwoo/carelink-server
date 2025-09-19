@@ -28,3 +28,7 @@
 ---
 ## 서버 아키텍처
 <img width="1258" height="619" alt="image" src="https://github.com/user-attachments/assets/68ca9abe-e414-4c96-9732-a4307ea5a796" />
+
+
+## 엔티티 구조
+<img width="1407" height="1142" alt="image" src="https://github.com/user-attachments/assets/8bca25ba-3997-42b1-bf46-9c25cc210464" />
