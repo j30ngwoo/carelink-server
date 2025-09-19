@@ -31,4 +31,4 @@
 
 
 ## 엔티티 구조
-<img width="1407" height="1142" alt="image" src="https://github.com/user-attachments/assets/8bca25ba-3997-42b1-bf46-9c25cc210464" />
+<img width="1628" height="1070" alt="image" src="https://github.com/user-attachments/assets/5a489b47-9de6-407e-88f4-c8ac38b82052" />
